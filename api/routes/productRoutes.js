@@ -1,0 +1,232 @@
+import express from 'express';
+import Product from '../models/Product.js';
+import cloudinary from '../config/cloudinary.js';
+import multer from 'multer';
+
+const router = express.Router();
+
+/* ================= Multer ================= */
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
+
+/* ================= Helpers ================= */
+const ADULT_SIZES = ['S', 'M', 'L', 'XL', 'XXL', '3XL', '4XL'];
+const KID_SIZES = ['16', '18', '20', '22', '24', '26', '28'];
+const BALL_SIZES = ['3', '4', '5'];
+const ALL_SIZES = new Set([...ADULT_SIZES, ...KID_SIZES, ...BALL_SIZES]);
+
+function uploadToCloudinary(buffer) {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      { folder: 'fiebriticos_products', resource_type: 'image' }, // 👈 Cambié el folder a fiebriticos_products
+      (err, result) => (err ? reject(err) : resolve(result))
+    );
+    stream.end(buffer);
+  });
+}
+
+function sanitizeInv(obj) {
+  const clean = {};
+  for (const [size, qty] of Object.entries(obj || {})) {
+    if (!ALL_SIZES.has(String(size))) continue;
+    const n = Math.max(0, Math.trunc(Number(qty) || 0));
+    clean[size] = n;
+  }
+  return clean;
+}
+
+/* ================= Rutas ================= */
+
+/** Health check */
+router.get('/health', async (_req, res) => {
+  try {
+    const count = await Product.countDocuments();
+    res.json({ ok: true, count });
+  } catch {
+    res.status(500).json({ ok: false });
+  }
+});
+
+/** 1. Listado paginado */
+router.get('/', async (req, res) => {
+  try {
+    const page = Math.max(parseInt(req.query.page || '1', 10), 1);
+    const limit = Math.min(Math.max(parseInt(req.query.limit || '20', 10), 1), 100);
+    const q = (req.query.q || '').trim();
+    const type = (req.query.type || '').trim();
+    const sizes = (req.query.sizes || '').trim();
+    const mode = (req.query.mode || '').trim();
+
+    const find = {};
+    if (q) find.name = { $regex: q, $options: 'i' };
+
+    if (type === 'Ofertas') {
+      find.discountPrice = { $ne: null, $gt: 0 };
+    } else if (mode === 'disponibles') {
+      find.$and = [
+        { $or: [{ discountPrice: { $exists: false } }, { discountPrice: null }, { discountPrice: 0 }] },
+        { $expr: { $gt: [{ $sum: { $map: { input: { $objectToArray: '$stock' }, as: 's', in: '$$s.v' } } }, 0] } },
+      ];
+    } else if (type) {
+      find.type = type;
+    }
+
+    if (sizes) {
+      const sizesArray = sizes.split(',').map((s) => s.trim()).filter(Boolean);
+      if (sizesArray.length > 0) {
+        find.$or = sizesArray.map((size) => ({ [`stock.${size}`]: { $gt: 0 } }));
+      }
+    }
+
+    const projection = 'name price discountPrice type imageSrc images stock bodega createdAt isNew';
+
+    const [items, total] = await Promise.all([
+      Product.find(find).select(projection).sort({ createdAt: -1 }).skip((page - 1) * limit).limit(limit).lean(),
+      Product.countDocuments(find),
+    ]);
+
+    res.set('Cache-Control', 'public, max-age=20');
+    res.json({
+      items: items || [],
+      total: total || 0,
+      page,
+      pages: limit > 0 ? Math.ceil(total / limit) : 0,
+      limit,
+    });
+  } catch (err) {
+    console.error('❌ ERROR GET /api/products:', err);
+    res.status(500).json({ error: 'Error al obtener los productos', details: err.message });
+  }
+});
+
+/** 2. Obtener un solo producto por ID */
+router.get('/:id', async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id);
+    if (!product) return res.status(404).json({ error: 'Producto no encontrado' });
+    res.json(product);
+  } catch (err) {
+    if (err.kind === 'ObjectId') return res.status(404).json({ error: 'Producto no encontrado' });
+    res.status(500).json({ error: 'Error al obtener el producto' });
+  }
+});
+
+/** 3. Crear producto */
+router.post('/', upload.any(), async (req, res) => {
+  try {
+    const files = (req.files || []).filter((f) => f.fieldname === 'images' || f.fieldname === 'image');
+    const uploaded = await Promise.all(files.map((f) => uploadToCloudinary(f.buffer)));
+    const images = uploaded.map((u) => ({ public_id: u.public_id, url: u.secure_url }));
+    const imageSrc = images[0]?.url || '';
+
+    let stock = {};
+    try {
+      if (typeof req.body.stock === 'string') stock = JSON.parse(req.body.stock);
+      else if (typeof req.body.sizes === 'string') stock = JSON.parse(req.body.sizes);
+      else if (typeof req.body.stock === 'object') stock = req.body.stock;
+    } catch { stock = {}; }
+    
+    let bodega = {};
+    try {
+      if (typeof req.body.bodega === 'string') bodega = JSON.parse(req.body.bodega);
+      else if (typeof req.body.bodega === 'object') bodega = req.body.bodega;
+    } catch { bodega = {}; }
+
+    const isNew = req.body.isNew === 'true' || req.body.isNew === true || req.body.isNew === 'on';
+
+    const product = await Product.create({
+      name: String(req.body.name || '').trim(),
+      price: Number(req.body.price),
+      discountPrice: req.body.discountPrice ? Number(req.body.discountPrice) : null,
+      type: String(req.body.type || '').trim(),
+      stock: sanitizeInv(stock),
+      bodega: sanitizeInv(bodega),
+      imageSrc,
+      images,
+      isNew,
+    });
+
+    res.status(201).json(product);
+  } catch (err) {
+    res.status(500).json({ error: err.message || 'Error al crear producto' });
+  }
+});
+
+/** 4. Actualizar producto */
+router.put('/:id', async (req, res) => {
+  try {
+    const prev = await Product.findById(req.params.id).lean();
+    if (!prev) return res.status(404).json({ error: 'Producto no encontrado' });
+
+    let incomingStock = req.body.stock;
+    if (typeof incomingStock === 'string') { try { incomingStock = JSON.parse(incomingStock); } catch {} }
+    let nextStock = prev.stock;
+    if (incomingStock && typeof incomingStock === 'object') nextStock = sanitizeInv(incomingStock);
+
+    let incomingBodega = req.body.bodega;
+    if (typeof incomingBodega === 'string') { try { incomingBodega = JSON.parse(incomingBodega); } catch {} }
+    let nextBodega = prev.bodega || {};
+    if (incomingBodega && typeof incomingBodega === 'object') nextBodega = sanitizeInv(incomingBodega);
+
+    const update = {
+      name: req.body.name ? req.body.name.trim().slice(0, 150) : prev.name,
+      type: req.body.type ? req.body.type.trim().slice(0, 40) : prev.type,
+      price: Number(req.body.price) || prev.price,
+      discountPrice: (req.body.discountPrice !== undefined && req.body.discountPrice !== '') ? Number(req.body.discountPrice) : prev.discountPrice,
+      stock: nextStock,
+      bodega: nextBodega,
+    };
+
+    if (req.body.isNew !== undefined) update.isNew = req.body.isNew === 'true' || req.body.isNew === true || req.body.isNew === 'on';
+    if (req.body.imageSrc !== undefined) update.imageSrc = req.body.imageSrc || '';
+    if (req.body.imageSrc2 !== undefined) update.imageSrc2 = req.body.imageSrc2 || '';
+    if (req.body.imageAlt !== undefined) update.imageAlt = req.body.imageAlt || '';
+
+    let incomingImages = req.body.images;
+    if (typeof incomingImages === 'string') { try { incomingImages = JSON.parse(incomingImages); } catch {} }
+
+    if (Array.isArray(incomingImages)) {
+      const prevList = prev.images || [];
+      const normalized = [];
+      for (const raw of incomingImages.slice(0, 5)) {
+        if (!raw) continue;
+        if (typeof raw === 'string' && raw.startsWith('data:')) {
+          const up = await cloudinary.uploader.upload(raw, { folder: 'fiebriticos_products', resource_type: 'image' });
+          normalized.push({ public_id: up.public_id, url: up.secure_url });
+        } else if (typeof raw === 'string') {
+          const found = prevList.find((i) => i.url === raw);
+          normalized.push(found ? { public_id: found.public_id, url: found.url } : { public_id: null, url: raw });
+        } else if (raw && typeof raw === 'object' && raw.url) {
+          normalized.push({ public_id: raw.public_id || null, url: raw.url });
+        }
+      }
+      update.images = normalized;
+      update.imageSrc = normalized[0]?.url || '';
+      update.imageSrc2 = normalized[1]?.url || '';
+    }
+
+    const updated = await Product.findByIdAndUpdate(req.params.id, { $set: update }, { new: true, runValidators: true });
+    res.json(updated);
+  } catch (err) {
+    res.status(500).json({ error: 'Error al actualizar producto' });
+  }
+});
+
+/** 5. Eliminar producto */
+router.delete('/:id', async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id);
+    if (!product) return res.status(404).json({ error: 'Producto no encontrado' });
+
+    for (const img of product.images || []) {
+      if (img.public_id) { try { await cloudinary.uploader.destroy(img.public_id); } catch {} }
+    }
+    await product.deleteOne();
+
+    res.json({ message: 'Producto eliminado exitosamente' });
+  } catch (err) {
+    res.status(500).json({ error: 'Error al eliminar producto' });
+  }
+});
+
+export default router;
