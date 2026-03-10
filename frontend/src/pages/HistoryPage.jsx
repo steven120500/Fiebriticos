@@ -4,7 +4,8 @@ import { FaHistory, FaTrash, FaUser, FaCalendarAlt, FaArrowLeft, FaSearch } from
 import { useNavigate } from "react-router-dom";
 import Footer from "../components/Footer";
 
-const API_BASE = "https://fut-store.onrender.com";
+const API_BASE = "https://fiebriticos.onrender.com";
+
 
 export default function HistoryPage({ user }) {
   const [logs, setLogs] = useState([]);

@@ -9,7 +9,7 @@ export default function Footer() {
 
        {/* Texto inferior */}
        <div className="mt-4 text-sm text-gray-800 space-y-1">
-        <p>© 2025 FutStore. Todos los derechos reservados.</p>
+        <p>© 2026 Fiebriticos. Todos los derechos reservados.</p>
         <p>
           Diseñado por{" "}
           <a

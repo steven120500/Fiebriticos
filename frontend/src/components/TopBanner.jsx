@@ -4,7 +4,7 @@ function TopBanner() {
   const messages = [
     "STOCK DE +2500 CHEMAS",
     "ENVIOS A TODO EL PAIS",
-    "SOMOS FUTSTORE",
+    "SOMOS FIEBRITICOS",
     "TU ESTILO JUEGA EN PRIMERA",
   ];
   const [currentIndex, setCurrentIndex] = useState(0);

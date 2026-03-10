@@ -11,8 +11,8 @@ export default defineConfig({
       // Archivos estáticos que quieras incluir tal cual
       includeAssets: ['favicon.svg', 'robots.txt', 'apple-touch-icon.png'],
       manifest: {
-        name: 'FutStore',
-        short_name: 'FutStore',
+        name: 'Fiebriticos',
+        short_name: 'Fiebriticos',
         start_url: '/',
         display: 'standalone',
         background_color: '#ffffff',
