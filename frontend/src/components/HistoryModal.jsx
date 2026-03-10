@@ -1,10 +1,10 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
-import { FaHistory, FaTrash, FaUser, FaCalendarAlt, FaArrowLeft, FaSearch } from "react-icons/fa";
+import { FaHistory, FaTrash, FaUser, FaCalendarAlt, FaArrowLeft, FaSearch, FaFutbol } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import Footer from "../components/Footer";
 
-const API_BASE = "https://fiebriticos.onrender.com";
+const API_BASE = import.meta.env.VITE_API_BASE || "https://fiebriticos.onrender.com";
 
 /* --- Utilidades de fecha --- */
 function pad2(n) { return n < 10 ? `0${n}` : `${n}`; }
@@ -24,16 +24,14 @@ export default function HistoryPage({ user }) {
 
   const isSuperUser = user?.isSuperUser || false;
 
-  // Carga de datos con los parámetros que usaba tu modal antiguo
   const fetchHistory = async () => {
     setLoading(true);
     try {
       const roles = Array.isArray(user?.roles) ? user.roles.join(",") : "";
-      
       const params = new URLSearchParams({
         page: "1",
         limit: "500",
-        date: selectedDate, // 👈 Tu backend filtra por este día
+        date: selectedDate,
         _: String(Date.now()), 
       });
 
@@ -47,8 +45,6 @@ export default function HistoryPage({ user }) {
 
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
-      
-      // Manejo de la estructura de respuesta que usa tu backend
       const items = Array.isArray(data?.items) ? data.items : (Array.isArray(data) ? data : []);
       setLogs(items);
     } catch (e) {
@@ -61,10 +57,10 @@ export default function HistoryPage({ user }) {
 
   useEffect(() => {
     fetchHistory();
-  }, [selectedDate, user]); // Se recarga si cambias la fecha
+  }, [selectedDate, user]);
 
   const handleClear = async () => {
-    if (!window.confirm("¿Seguro que quieres eliminar TODO el historial?")) return;
+    if (!window.confirm("¿Seguro que quieres eliminar TODO el historial? Esta acción no se puede deshacer.")) return;
     setLoading(true);
     try {
       const res = await fetch(`${API_BASE}/api/history`, {
@@ -75,108 +71,148 @@ export default function HistoryPage({ user }) {
         },
       });
       if (!res.ok) throw new Error();
-      toast.success("Historial limpiado.");
+      toast.success("Historial limpiado correctamente.");
       setLogs([]);
     } catch {
-      toast.error("Error al limpiar.");
+      toast.error("Error al intentar limpiar el historial.");
     } finally {
       setLoading(false);
     }
   };
 
-  // Filtro de búsqueda local (lo que escribes en el input)
   const filteredLogs = useMemo(() => {
     const term = q.trim().toLowerCase();
     if (!term) return logs;
     return logs.filter((log) => 
       String(log.item || log.productName || "").toLowerCase().includes(term) ||
-      String(log.user || "").toLowerCase().includes(term)
+      String(log.user || "").toLowerCase().includes(term) ||
+      String(log.action || "").toLowerCase().includes(term)
     );
   }, [logs, q]);
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col">
-      <div className="flex-grow pt-44 px-4 md:px-8 max-w-6xl mx-auto w-full">
+    <div className="min-h-screen bg-fiebriGris flex flex-col font-poppins">
+      <div className="flex-grow pt-32 pb-20 px-4 md:px-8 max-w-6xl mx-auto w-full">
         
-        {/* BOTÓN VOLVER */}
+        {/* BOTÓN VOLVER - Estilo Fiebriticos */}
         <button 
           onClick={() => navigate(-1)} 
-          className="flex items-center gap-2 px-4 py-2 bg-[#111] border border-gray-800 rounded-lg text-gray-400 hover:text-[#D4AF37] transition font-bold text-sm mb-6"
+          className="flex items-center gap-2 px-5 py-2.5 bg-white text-fiebriAzul border border-gray-200 rounded-2xl hover:bg-fiebriAzul hover:text-white transition-all shadow-sm font-bold text-sm mb-8 group"
         >
-          <FaArrowLeft /> Volver
+          <FaArrowLeft className="group-hover:-translate-x-1 transition-transform" /> 
+          Regresar al Panel
         </button>
 
         {/* HEADER DE PÁGINA */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 border-b border-gray-800 pb-6 gap-4">
-          <h1 className="text-3xl font-black italic uppercase flex items-center gap-3">
-            <FaHistory className="text-[#D4AF37]" /> Bitácora de Cambios
-          </h1>
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end mb-10 gap-6">
+          <div>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-3 bg-fiebriAzul rounded-2xl shadow-lg shadow-fiebriAzul/20">
+                <FaHistory className="text-fiebriVerde text-2xl" />
+              </div>
+              <h1 className="text-4xl font-black text-fiebriAzul tracking-tighter uppercase italic">
+                Bitácora <span className="text-fiebriVerde">Pro</span>
+              </h1>
+            </div>
+            <p className="text-gray-400 font-medium ml-1">Control total de movimientos del inventario.</p>
+          </div>
 
-          <div className="flex flex-wrap gap-3 w-full md:w-auto">
-            {/* BUSCADOR */}
-            <div className="relative flex-1 md:w-64">
-              <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 size-3" />
+          <div className="flex flex-wrap gap-3 w-full lg:w-auto">
+            {/* BUSCADOR ELEGANTE */}
+            <div className="relative flex-1 md:w-72">
+              <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
               <input
                 type="text"
-                placeholder="Buscar producto o admin..."
+                placeholder="Buscar por producto o admin..."
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
-                className="w-full bg-[#111] border border-gray-800 rounded-lg pl-10 pr-4 py-2 text-sm focus:border-[#D4AF37] outline-none"
+                className="w-full bg-white border-2 border-transparent rounded-2xl pl-12 pr-4 py-3 text-sm focus:border-fiebriAzul outline-none shadow-sm transition-all"
               />
             </div>
 
             {/* FILTRO FECHA */}
-            <input
-              type="date"
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-              className="bg-[#111] border border-gray-800 rounded-lg px-4 py-2 text-sm text-[#D4AF37] font-bold outline-none"
-            />
+            <div className="relative">
+               <input
+                type="date"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                className="bg-white border-2 border-transparent rounded-2xl px-5 py-3 text-sm text-fiebriAzul font-black outline-none shadow-sm focus:border-fiebriVerde transition-all cursor-pointer"
+              />
+            </div>
 
             {isSuperUser && (
-              <button onClick={handleClear} className="bg-red-600/10 border border-red-600 text-red-600 px-4 py-2 rounded-lg font-bold text-xs hover:bg-red-600 hover:text-white transition">
-                LIMPIAR
+              <button 
+                onClick={handleClear} 
+                className="bg-red-50 text-red-500 border-2 border-red-100 px-6 py-3 rounded-2xl font-black text-xs hover:bg-red-500 hover:text-white transition-all active:scale-95 uppercase tracking-widest"
+              >
+                Limpiar Todo
               </button>
             )}
           </div>
         </div>
 
-        {/* LISTADO */}
+        {/* LISTADO DE LOGS */}
         {loading ? (
-          <div className="text-center py-20 animate-pulse text-gray-500 uppercase tracking-widest font-black">Sincronizando registros...</div>
+          <div className="flex flex-col items-center justify-center py-24">
+             <FaFutbol className="text-fiebriAzul text-5xl animate-spin mb-4 opacity-20" />
+             <p className="text-gray-400 font-black uppercase tracking-[0.3em] text-xs">Consultando el VAR...</p>
+          </div>
         ) : filteredLogs.length === 0 ? (
-          <div className="text-center py-32 bg-[#0a0a0a] rounded-2xl border border-dashed border-gray-800">
-            <p className="text-gray-600 font-bold uppercase tracking-widest text-sm">
-              {q ? "No hay resultados para esta búsqueda" : "No hay cambios registrados en esta fecha"}
+          <div className="text-center py-32 bg-white rounded-[2rem] border-2 border-dashed border-gray-100 shadow-inner">
+            <div className="w-20 h-20 bg-fiebriGris rounded-full flex items-center justify-center mx-auto mb-6">
+               <FaHistory className="text-gray-300 text-3xl" />
+            </div>
+            <p className="text-fiebriAzul font-black uppercase tracking-widest text-sm">
+              {q ? "No se encontraron coincidencias" : "Sin movimientos registrados para hoy"}
             </p>
           </div>
         ) : (
-          <div className="grid gap-4 mb-20">
+          <div className="grid gap-6 mb-24">
             {filteredLogs.map((log, idx) => (
-              <div key={log._id || idx} className="bg-[#0a0a0a] border border-gray-800 p-5 rounded-xl hover:border-[#D4AF37]/40 transition group">
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 bg-[#111] rounded-full flex items-center justify-center border border-gray-800 text-[#D4AF37] group-hover:border-[#D4AF37] transition flex-shrink-0">
-                    <FaUser size={16} />
+              <div 
+                key={log._id || idx} 
+                className="bg-white border border-gray-100 p-6 rounded-[1.5rem] shadow-sm hover:shadow-xl hover:shadow-fiebriAzul/5 transition-all group relative overflow-hidden"
+              >
+                {/* Indicador de acción lateral */}
+                <div className={`absolute left-0 top-0 bottom-0 w-2 ${log.action?.includes('Eliminar') ? 'bg-red-500' : 'bg-fiebriVerde'}`} />
+
+                <div className="flex flex-col md:flex-row md:items-center gap-6">
+                  <div className="w-14 h-14 bg-fiebriGris rounded-2xl flex items-center justify-center border border-gray-100 text-fiebriAzul group-hover:bg-fiebriAzul group-hover:text-white transition-all flex-shrink-0 shadow-inner">
+                    <FaUser size={20} />
                   </div>
+                  
                   <div className="flex-1 min-w-0">
-                    <div className="flex justify-between items-start gap-2">
-                      <p className="font-black uppercase text-xs tracking-wider truncate">
-                        {log.user} <span className="font-normal text-gray-500 lowercase mx-1">realizó un</span> <span className="text-[#D4AF37]">{log.action}</span>
-                      </p>
-                      <span className="text-[10px] font-mono text-gray-700 hidden sm:block">REF: {log._id?.substring(18)}</span>
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mb-1">
+                      <span className="font-black text-fiebriAzul uppercase text-sm tracking-tight">{log.user}</span>
+                      <span className="px-3 py-1 bg-fiebriAzul/5 text-fiebriAzul text-[10px] font-black rounded-full uppercase tracking-wider">
+                        {log.action}
+                      </span>
                     </div>
-                    <p className="text-white font-bold text-xl mt-1 italic tracking-tight">{log.item || log.productName}</p>
-                    <p className="text-gray-500 text-[10px] mt-3 flex items-center gap-2 font-black uppercase tracking-widest">
-                      <FaCalendarAlt /> {log.date ? new Date(log.date).toLocaleString() : new Date(log.createdAt).toLocaleString()}
-                    </p>
+                    
+                    <h3 className="text-fiebriAzul font-black text-2xl italic uppercase tracking-tighter leading-tight">
+                      {log.item || log.productName}
+                    </h3>
+
+                    <div className="flex items-center gap-4 mt-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                      <span className="flex items-center gap-1.5">
+                        <FaCalendarAlt className="text-fiebriVerde" /> 
+                        {log.date ? new Date(log.date).toLocaleString() : new Date(log.createdAt).toLocaleString()}
+                      </span>
+                      <span className="hidden sm:block opacity-30">|</span>
+                      <span className="hidden sm:block">REF ID: {log._id?.substring(18)}</span>
+                    </div>
                     
                     {log.details && (
-                      <div className="mt-4 bg-black/50 border border-gray-900 rounded-lg p-3">
-                        <p className="text-[9px] text-gray-600 uppercase font-black mb-2 tracking-widest">Detalles técnicos:</p>
-                        <pre className="text-[11px] text-gray-400 font-mono overflow-x-auto">
-                          {typeof log.details === "string" ? log.details : JSON.stringify(log.details, null, 2)}
-                        </pre>
-                      </div>
+                      <details className="mt-4 group/details">
+                        <summary className="text-[10px] font-black text-fiebriVerde cursor-pointer uppercase tracking-widest list-none hover:underline">
+                          Ver detalles técnicos [+]
+                        </summary>
+                        <div className="mt-3 bg-fiebriGris rounded-xl p-4 border border-gray-100">
+                          <pre className="text-[11px] text-fiebriAzul/70 font-mono overflow-x-auto whitespace-pre-wrap">
+                            {typeof log.details === "string" ? log.details : JSON.stringify(log.details, null, 2)}
+                          </pre>
+                        </div>
+                      </details>
                     )}
                   </div>
                 </div>

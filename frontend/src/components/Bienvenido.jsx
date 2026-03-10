@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-// 📦 DATOS DEL CARRUSEL (Ofertas ahora de primero)
+// 📦 DATOS DEL CARRUSEL
 const slides = [
-  { id: 1, isOffer: true, title: "Ver Ofertas", eventName: "filtrarOfertas" },
+  { id: 1, isOffer: true, title: "🔥 Ver Ofertas", eventName: "filtrarOfertas" },
   { id: 2, image: "/RetroB.png", title: "Ver Retros", eventName: "filtrarRetros" },
   { id: 3, image: "/PlayerB.png", title: "Ver Player", eventName: "filtrarPlayer" },
   { id: 4, image: "/FanB.png", title: "Ver Fan", eventName: "filtrarFan" },
@@ -24,7 +24,7 @@ export default function Bienvenido() {
   useEffect(() => {
     const timer = setInterval(() => {
       setIndex((prev) => (prev + 1) % slides.length);
-    }, 4000);
+    }, 5000); // 5 segundos para que de tiempo de apreciar la chema
     return () => clearInterval(timer);
   }, []);
 
@@ -33,103 +33,86 @@ export default function Bienvenido() {
   };
 
   return (
-    <section className="relative w-full h-full sm:min-h-screen flex flex-col items-center justify-center overflow-hidden">
+    <section className="relative w-full h-[85vh] md:h-screen flex flex-col items-center justify-center overflow-hidden bg-fiebriAzul">
       
-      {/* 🖼️ FONDO RESPONSIVE */}
+      {/* 🖼️ FONDO CON OVERLAY DE MARCA */}
       <div className="absolute inset-0 z-0">
         <img
           src={isMobile ? "/FondoM.png" : "/FondoD.png"}
           alt="Fondo Fiebriticos"
-          className="w-full h-full object-fill brightness-[0.5]" 
+          className="w-full h-full object-cover opacity-40 grayscale-[20%]" 
         />
+        {/* Degradado Azul Fiebri para fundir con el resto de la página */}
+        <div className="absolute inset-0 bg-gradient-to-t from-fiebriAzul via-fiebriAzul/40 to-transparent" />
       </div>
 
-      <div className="absolute inset-0 z-0 bg-gradient-to-t from-black via-transparent to-black/40" />
-
       {/* 🔹 CONTENIDO PRINCIPAL */}
-      <div className="relative z-10 w-full max-w-6xl mx-auto px-4 grid grid-cols-1 md:grid-cols-2 gap-8 items-center h-full pt-16 md:pt-32">
+      <div className="relative z-10 w-full max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 gap-4 items-center h-full pt-20">
         
-        {/* IZQUIERDA: TEXTOS */}
-        <div className="flex flex-col items-center md:items-start text-center md:text-left order-2 md:order-1">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
-            <h1 className="mt-2 mb-16 md:mt-0 md:mb-0 text-5xl md:text-8xl font-black text-white leading-none tracking-tighter drop-shadow-2xl">
-              BIENVENIDO
+        {/* IZQUIERDA: TEXTOS IMPACTANTES */}
+        <div className="flex flex-col items-center md:items-start text-center md:text-left">
+          <motion.div 
+            initial={{ opacity: 0, x: -50 }} 
+            animate={{ opacity: 1, x: 0 }} 
+            transition={{ duration: 0.8 }}
+          >
+            <span className="bg-fiebriVerde text-fiebriAzul px-3 py-1 rounded-full text-xs font-black uppercase tracking-widest mb-4 inline-block">
+              Temporada 2026
+            </span>
+            <h1 className="text-6xl md:text-9xl font-black text-white leading-none tracking-tighter">
+              FIEBRE<br/>
+              <span className="text-fiebriVerde">TOTAL</span>
             </h1>
-            <h2 className="-mt-10 mb-6 md:mt-0 md:mb-0 text-4xl md:text-6xl font-light text-gray-200 mt-2">
-              a <span className="font-serif italic text-white">Fiebriticos</span>
+            <h2 className="text-2xl md:text-4xl font-light text-gray-200 mt-4">
+              a <span className="italic font-serif text-white">Fiebriticos</span>
             </h2>
-            <p className="-mt-3 mb-3 md:mt-0 md:mb-0 text-gray-300 text-lg md:text-xl max-w-md mx-auto md:mx-0 font-medium">
-              La élite del fútbol, en tu piel.
+            <p className="mt-6 text-gray-300 text-lg md:text-xl max-w-md font-medium border-l-4 border-fiebriVerde pl-4">
+              La élite del fútbol, en tu piel. Las mejores chemas del país.
             </p>
           </motion.div>
         </div>
 
-        {/* DERECHA: CAMISETAS + BOTÓN */}
-        <div className="relative h-[400px] md:h-[600px] flex items-center justify-center order-1 md:order-2 mt-36 md:mt-0">
+        {/* DERECHA: EL SHOWROOM DE CAMISETAS */}
+        <div className="relative h-[350px] md:h-[550px] flex items-center justify-center mt-10 md:mt-0">
           
           <AnimatePresence mode="wait">
             {slides[index].isOffer ? (
-              /* 🧩 COMBO DE 3 CAMISETAS PARA OFERTAS (SLIDE 1) */
               <motion.div 
                 key="combo-ofertas"
                 className="relative w-full h-full flex items-center justify-center"
-                initial={{ opacity: 0, scale: 0.8 }}
+                initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.8 }}
+                exit={{ opacity: 0, scale: 1.1 }}
               >
-                {/* 1. Retro */}
-                <motion.img 
-                  src="/RetroB.png" 
-                  initial={{ x: -50, rotate: -15, opacity: 0 }}
-                  animate={{ x: isMobile ? -40 : -80, rotate: -15, opacity: 0.8 }}
-                  className="absolute w-2/3 md:w-full max-h-[70%] object-contain z-0 filter blur-[1px]"
-                />
-                {/* 2. Fan */}
-                <motion.img 
-                  src="/FanB.png" 
-                  initial={{ x: 50, rotate: 15, opacity: 0 }}
-                  animate={{ x: isMobile ? 40 : 80, rotate: 15, opacity: 0.8 }}
-                  className="absolute w-2/3 md:w-full max-h-[70%] object-contain z-0 filter blur-[1px]"
-                />
-                {/* 3. Nacional (Adelante) */}
-                <motion.img 
-                  src="/NacionalB.png" 
-                  initial={{ y: 50, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  style={{ filter: "drop-shadow(0px 20px 40px rgba(0,0,0,0.8))" }}
-                  className="relative w-full max-h-[85%] object-contain z-10"
-                />
+                <img src="/RetroB.png" className="absolute w-1/2 md:w-2/3 object-contain -translate-x-24 -rotate-12 opacity-40 blur-[2px]" />
+                <img src="/FanB.png" className="absolute w-1/2 md:w-2/3 object-contain translate-x-24 rotate-12 opacity-40 blur-[2px]" />
+                <img src="/NacionalB.png" className="relative w-3/4 md:w-full max-h-full object-contain z-10 drop-shadow-[0_20px_50px_rgba(0,0,0,0.5)]" />
               </motion.div>
             ) : (
-              /* 👕 CAMISETA INDIVIDUAL (PARA EL RESTO) */
               <motion.img
                 key={slides[index].id}
                 src={slides[index].image}
-                initial={{ opacity: 0, x: 100, rotate: 10, scale: 0.8 }}
-                animate={{ opacity: 1, x: 0, rotate: 0, scale: 1 }}
-                exit={{ opacity: 0, x: -100, rotate: -10, scale: 0.8 }}
-                transition={{ type: "spring", stiffness: 120, damping: 14 }}
-                style={{ filter: "drop-shadow(0px 20px 40px rgba(0,0,0,0.7))" }}
-                className="max-h-full max-w-full object-contain relative z-10"
+                initial={{ opacity: 0, y: 30, rotate: 5 }}
+                animate={{ opacity: 1, y: 0, rotate: 0 }}
+                exit={{ opacity: 0, y: -30, rotate: -5 }}
+                transition={{ type: "spring", stiffness: 100 }}
+                className="max-h-full max-w-full object-contain relative z-10 drop-shadow-[0_25px_50px_rgba(0,0,0,0.6)]"
               />
             )}
           </AnimatePresence>
 
-          {/* 🔘 BOTÓN FLOTANTE DINÁMICO */}
-          <div className="absolute bottom-10 right-4 md:right-12 z-20">
+          {/* 🔘 BOTÓN DE ACCIÓN (ESTILO CAJA) */}
+          <div className="absolute -bottom-4 md:bottom-5 z-20">
             <AnimatePresence mode="wait">
               <motion.button
                 key={slides[index].id}
                 onClick={handleNavigation}
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                exit={{ y: 10, opacity: 0 }}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className={`px-8 py-3 rounded-full font-black text-lg shadow-2xl transition-all uppercase tracking-tighter ring-2 ring-black
+                whileHover={{ scale: 1.1, boxShadow: "0 0 25px rgba(34, 197, 94, 0.5)" }}
+                whileTap={{ scale: 0.9 }}
+                className={`px-10 py-4 rounded-xl font-black text-xl shadow-2xl transition-all uppercase tracking-tight
                   ${slides[index].isOffer 
-                    ? "bg-red-600 text-white hover:bg-red-500 hover:shadow-[0_0_20px_rgba(220,38,38,0.5)]" 
-                    : "bg-gradient-to-r from-gray-200 via-white to-gray-300 text-black hover:bg-white"
+                    ? "bg-red-600 text-white animate-pulse" 
+                    : "boton-fiebri-verde text-fiebriAzul"
                   }`}
               >
                 {slides[index].title}
@@ -137,6 +120,16 @@ export default function Bienvenido() {
             </AnimatePresence>
           </div>
         </div>
+      </div>
+
+      {/* Indicadores de Slide */}
+      <div className="absolute bottom-8 flex gap-2">
+        {slides.map((_, i) => (
+          <div 
+            key={i} 
+            className={`h-1.5 transition-all duration-500 rounded-full ${i === index ? "w-8 bg-fiebriVerde" : "w-2 bg-white/20"}`} 
+          />
+        ))}
       </div>
     </section>
   );

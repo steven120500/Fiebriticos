@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { toast } from "react-toastify";
-import { FaTimes, FaEye, FaEyeSlash, FaUser, FaPhone, FaEnvelope, FaLock } from "react-icons/fa";
+import { FaTimes, FaEye, FaEyeSlash, FaUser, FaPhone, FaEnvelope, FaLock, FaFutbol, FaShieldAlt } from "react-icons/fa";
+import { motion, AnimatePresence } from "framer-motion";
 
-const API_BASE = "https://fiebriticos.onrender.com";
+const API_BASE = import.meta.env.VITE_API_URL || "https://fiebriticos.onrender.com";
 
 export default function RegisterUserModal({ onClose }) {
-  // Estados para los nuevos datos
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -17,7 +17,7 @@ export default function RegisterUserModal({ onClose }) {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // Roles
+  // Roles de administración
   const [roles, setRoles] = useState({
     add: false,
     edit: false,
@@ -29,12 +29,16 @@ export default function RegisterUserModal({ onClose }) {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const handlePhoneChange = (e) => {
+    const value = e.target.value.replace(/\D/g, ''); 
+    if (value.length <= 8) setFormData({ ...formData, phone: value });
+  };
+
   async function handleSubmit(e) {
     e.preventDefault();
     
-    // Validaciones básicas
-    if (!formData.email || !formData.password || !formData.firstName) {
-      return toast.warning("Por favor llena los campos obligatorios");
+    if (!formData.email || !formData.password || !formData.firstName || formData.phone.length !== 8) {
+      return toast.warning("Completa los campos obligatorios y el celular de 8 dígitos");
     }
 
     setLoading(true);
@@ -44,7 +48,6 @@ export default function RegisterUserModal({ onClose }) {
         .filter(([, value]) => value)
         .map(([key]) => key);
 
-      // Preparamos el paquete de datos para el backend
       const payload = { 
         username: formData.email, 
         email: formData.email,
@@ -64,158 +67,177 @@ export default function RegisterUserModal({ onClose }) {
       const data = await res.json();
 
       if (res.ok) {
-        toast.success("✅ Usuario creado exitosamente");
+        toast.success("✅ Fichaje completado: Usuario creado");
         onClose?.(); 
       } else {
         toast.error(data.message || "Error al registrar");
       }
     } catch (error) {
-      console.error(error);
-      toast.error("Error de conexión");
+      toast.error("Error de conexión con el servidor");
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    // 1. Quitamos pt-28 para centrarlo bien y evitar cortes en pantallas pequeñas
-    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex justify-center items-center p-4">
-      
-      {/* 2. Agregamos max-h-[90vh] y overflow-y-auto para el SCROLL */}
-      <div className="elative bg-white pt-15 p-6 rounded-lg shadow-md max-w-md w-full max-h-screen overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400">
+    <div className="fixed inset-0 z-[999] flex items-center justify-center bg-fiebriAzul/60 backdrop-blur-md px-4">
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.9, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        className="relative w-full max-w-md rounded-[2.5rem] bg-white shadow-2xl overflow-hidden border-b-8 border-fiebriVerde max-h-[90vh] flex flex-col"
+      >
         
-        <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-black transition z-10">
-          <FaTimes size={20} />
-        </button>
-
-        <h2 className="text-2xl font-black uppercase text-center mb-6 tracking-wide sticky top-0 bg-white z-0 pb-2">
-          CREAR CUENTA
-        </h2>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Header - Azul Fiebriticos */}
+        <div className="bg-fiebriAzul p-8 text-center relative overflow-hidden flex-shrink-0">
+          <FaFutbol className="absolute -top-4 -left-4 text-white/5 text-7xl rotate-12" />
+          <button onClick={onClose} className="absolute right-5 top-5 text-white/50 hover:text-fiebriVerde transition-colors z-20">
+            <FaTimes size={24} />
+          </button>
           
-          {/* Fila 1: Nombre y Apellido */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-               <label className="text-xs font-bold text-gray-400 uppercase ml-1">Nombre</label>
+          <h2 className="text-3xl font-black text-white italic uppercase tracking-tighter">
+            Nuevo <span className="text-fiebriVerde">Fichaje</span>
+          </h2>
+          <p className="text-white/60 font-bold text-[10px] uppercase tracking-widest mt-2">
+            Registro de Administradores
+          </p>
+        </div>
+
+        {/* Formulario con Scroll interno si es necesario */}
+        <form onSubmit={handleSubmit} className="p-8 space-y-5 overflow-y-auto scrollbar-thin scrollbar-thumb-fiebriAzul">
+          
+          {/* Nombre y Apellido */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+               <label className="text-[10px] font-black text-gray-400 uppercase ml-2 tracking-widest">Nombre</label>
                <div className="relative">
-                 <FaUser className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
+                 <FaUser className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
                  <input 
                    name="firstName" 
                    type="text" 
-                   placeholder="Nombre" 
-                   className="w-full border border-gray-200 bg-gray-50 pl-9 p-3 rounded-xl focus:ring-1 ring-black outline-none transition"
+                   placeholder="Ej: Steven" 
+                   className="w-full bg-fiebriGris border-none pl-11 py-3 rounded-2xl text-sm focus:ring-2 focus:ring-fiebriAzul transition-all"
                    onChange={handleChange}
                    required
                  />
                </div>
             </div>
-            <div>
-               <label className="text-xs font-bold text-gray-400 uppercase ml-1">Apellido</label>
+            <div className="space-y-1">
+               <label className="text-[10px] font-black text-gray-400 uppercase ml-2 tracking-widest">Apellido</label>
                <input 
                  name="lastName" 
                  type="text" 
-                 placeholder="Apellido" 
-                 className="w-full border border-gray-200 bg-gray-50 p-3 rounded-xl focus:ring-1 ring-black outline-none transition"
+                 placeholder="Opcional" 
+                 className="w-full bg-fiebriGris border-none px-5 py-3 rounded-2xl text-sm focus:ring-2 focus:ring-fiebriAzul transition-all"
                  onChange={handleChange}
                />
             </div>
           </div>
 
-          {/* Fila 2: Celular */}
-          <div>
-            <label className="text-xs font-bold text-gray-400 uppercase ml-1">Celular (8 dígitos)</label>
-            <div className="relative">
-              <FaPhone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
-              <input 
-                 name="phone" 
-                 type="tel" 
-                 placeholder="88888888" 
-                 maxLength={8}
-                 className="w-full border border-gray-200 bg-gray-50 pl-9 p-3 rounded-xl focus:ring-1 ring-black outline-none transition"
-                 onChange={handleChange}
-              />
+          {/* Celular y Correo */}
+          <div className="space-y-4">
+            <div className="space-y-1">
+              <label className="text-[10px] font-black text-gray-400 uppercase ml-2 tracking-widest">Celular Tico</label>
+              <div className="relative">
+                <FaPhone className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
+                <input 
+                   name="phone" 
+                   type="tel" 
+                   value={formData.phone}
+                   placeholder="8888 8888" 
+                   className="w-full bg-fiebriGris border-none pl-11 py-3 rounded-2xl text-sm focus:ring-2 focus:ring-fiebriAzul transition-all font-bold"
+                   onChange={handlePhoneChange}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-[10px] font-black text-gray-400 uppercase ml-2 tracking-widest">Correo Electrónico</label>
+              <div className="relative">
+                <FaEnvelope className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
+                <input 
+                   name="email" 
+                   type="email" 
+                   placeholder="admin@fiebriticos.com" 
+                   className="w-full bg-fiebriGris border-none pl-11 py-3 rounded-2xl text-sm focus:ring-2 focus:ring-fiebriAzul transition-all"
+                   onChange={handleChange}
+                   required
+                />
+              </div>
             </div>
           </div>
 
-          {/* Fila 3: Correo */}
-          <div>
-            <label className="text-xs font-bold text-gray-400 uppercase ml-1">Correo Electrónico</label>
+          {/* Contraseña */}
+          <div className="space-y-1">
+            <label className="text-[10px] font-black text-gray-400 uppercase ml-2 tracking-widest">Clave de Acceso</label>
             <div className="relative">
-              <FaEnvelope className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
-              <input 
-                 name="email" 
-                 type="email" 
-                 placeholder="tu@correo.com" 
-                 className="w-full border border-gray-200 bg-gray-50 pl-9 p-3 rounded-xl focus:ring-1 ring-black outline-none transition"
-                 onChange={handleChange}
-                 required
-              />
-            </div>
-          </div>
-
-          {/* Fila 4: Contraseña */}
-          <div>
-            <label className="text-xs font-bold text-gray-400 uppercase ml-1">Contraseña</label>
-            <div className="relative">
-              <FaLock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
+              <FaLock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
               <input
                 name="password"
                 type={showPassword ? "text" : "password"}
                 placeholder="********"
-                className="w-full border border-gray-200 bg-gray-50 pl-9 pr-10 p-3 rounded-xl focus:ring-1 ring-black outline-none transition"
+                className="w-full bg-fiebriGris border-none pl-11 pr-12 py-3 rounded-2xl text-sm focus:ring-2 focus:ring-fiebriAzul transition-all"
                 onChange={handleChange}
                 required
               />
-              {/* Ajusté la posición del ojo para que quede centrado verticalmente */}
-              <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute bg-transparent right-3 top-0 -translate-y-1/2 text-gray-400 hover:text-black">
+              <button 
+                type="button" 
+                onClick={() => setShowPassword(!showPassword)} 
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-fiebriAzul bg-transparent"
+              >
                 {showPassword ? <FaEyeSlash /> : <FaEye />}
               </button>
             </div>
-            {/* Requisitos visuales */}
-            <div className="mt-2 ml-1 space-y-1">
-               <p className={`text-[10px] flex items-center gap-1 ${formData.password.length >= 6 ? 'text-green-600' : 'text-gray-400'}`}>
-                 ○ 6+ caracteres
+            <div className="flex gap-4 mt-2 ml-2">
+               <p className={`text-[9px] font-black uppercase flex items-center gap-1 ${formData.password.length >= 6 ? 'text-fiebriVerde' : 'text-gray-300'}`}>
+                 {formData.password.length >= 6 ? '✓' : '○'} 6+ Letras
                </p>
-               <p className={`text-[10px] flex items-center gap-1 ${/[0-9]/.test(formData.password) ? 'text-green-600' : 'text-gray-400'}`}>
-                 ○ Un número
+               <p className={`text-[9px] font-black uppercase flex items-center gap-1 ${/[0-9]/.test(formData.password) ? 'text-fiebriVerde' : 'text-gray-300'}`}>
+                 {/[0-9]/.test(formData.password) ? '✓' : '○'} Un Número
                </p>
             </div>
           </div>
 
-          {/* Sección de Permisos (Roles) */}
-          <div className="pt-2 border-t border-dashed">
-            <p className="text-[10px] font-bold text-gray-400 uppercase mb-2">Permisos de Administrador:</p>
-            <div className="flex flex-wrap gap-3">
+          {/* Permisos (Roles) */}
+          <div className="pt-4 border-t border-fiebriGris">
+            <div className="flex items-center gap-2 mb-3 ml-2">
+              <FaShieldAlt className="text-fiebriAzul text-xs" />
+              <p className="text-[10px] font-black text-fiebriAzul uppercase tracking-widest">Permisos del Sistema</p>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
               {[
                 { key: "add", label: "Agregar" },
                 { key: "edit", label: "Editar" },
                 { key: "delete", label: "Eliminar" },
-                { key: "history", label: "Historial" }
+                { key: "history", label: "Bitácora" }
               ].map(({ key, label }) => (
-                <label key={key} className="flex items-center gap-1 cursor-pointer hover:bg-gray-50 px-2 py-1 rounded transition">
+                <label key={key} className={`flex items-center justify-between p-3 rounded-2xl border-2 transition-all cursor-pointer ${roles[key] ? 'border-fiebriVerde bg-fiebriVerde/5' : 'border-transparent bg-fiebriGris hover:bg-gray-200'}`}>
+                  <span className={`text-[10px] font-black uppercase ${roles[key] ? 'text-fiebriAzul' : 'text-gray-400'}`}>{label}</span>
                   <input
                     type="checkbox"
                     checked={roles[key]}
                     onChange={() => setRoles((prev) => ({ ...prev, [key]: !prev[key] }))}
-                    className="accent-black w-4 h-4"
+                    className="hidden"
                   />
-                  <span className="text-xs font-medium text-gray-600">{label}</span>
+                  <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${roles[key] ? 'bg-fiebriVerde border-fiebriVerde' : 'bg-white border-gray-300'}`}>
+                    {roles[key] && <div className="w-1.5 h-1.5 bg-white rounded-full" />}
+                  </div>
                 </label>
               ))}
             </div>
           </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className={`w-full py-4 fondo-plateado text-black rounded-xl font-bold uppercase tracking-wider hover:bg-gray-800 hover:text-white transition shadow-lg mt-4 ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
-          >
-            {loading ? "Creando..." : "Crear Cuenta"}
-          </button>
-
+          {/* Botón de Creación */}
+          <div className="pt-4">
+            <button
+              type="submit"
+              disabled={loading}
+              className="boton-fiebri-verde w-full py-4 text-white rounded-2xl font-black text-lg uppercase tracking-tighter italic shadow-xl shadow-fiebriVerde/20 transition-all disabled:opacity-50"
+            >
+              {loading ? "Registrando..." : "Confirmar Fichaje"}
+            </button>
+          </div>
         </form>
-      </div>
+      </motion.div>
     </div>
   );
 }

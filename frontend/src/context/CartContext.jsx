@@ -12,9 +12,11 @@ export const useCart = () => {
 export const CartProvider = ({ children }) => {
   const [cart, setCart] = useState(() => {
     try {
-      const saved = localStorage.getItem('futstore_cart');
+      // ✅ Actualizamos a la llave oficial de Fiebriticos
+      const saved = localStorage.getItem('fiebriticos_cart');
       return saved ? JSON.parse(saved) : [];
-    } catch {
+    } catch (e) {
+      console.error("Error al cargar el carrito:", e);
       return [];
     }
   });
@@ -22,31 +24,32 @@ export const CartProvider = ({ children }) => {
   const [isCartOpen, setIsCartOpen] = useState(false);
 
   useEffect(() => {
-    localStorage.setItem('futstore_cart', JSON.stringify(cart));
+    // ✅ Guardamos con la nueva identidad
+    localStorage.setItem('fiebriticos_cart', JSON.stringify(cart));
   }, [cart]);
 
   const addToCart = (product, size) => {
     setCart((prev) => {
+      const productId = product._id || product.id;
       const existingIndex = prev.findIndex(
-        (item) => (item._id || item.id) === (product._id || product.id) && item.selectedSize === size
+        (item) => (item._id || item.id) === productId && item.selectedSize === size
       );
 
       if (existingIndex >= 0) {
         const newCart = [...prev];
         newCart[existingIndex].quantity += 1;
-        // toast.success(`Otra unidad agregada: ${product.name}`); // Opcional
+        toast.info(`¡Otra unidad de la joya agregada! ⚽`, { icon: "➕" });
         return newCart;
       } else {
-        // toast.success(`Agregado al carrito 🛒`); // Opcional
+        toast.success(`¡Fichaje completado! Al carrito 🛒`, { icon: "✅" });
         return [...prev, { ...product, selectedSize: size, quantity: 1 }];
       }
     });
-    // ❌ COMENTADO PARA QUE NO ABRA EL DRAWER AUTOMÁTICAMENTE
-    // setIsCartOpen(true); 
   };
 
   const removeFromCart = (id, size) => {
     setCart((prev) => prev.filter((item) => !((item._id || item.id) === id && item.selectedSize === size)));
+    toast.warn("Producto fuera de la convocatoria 🗑️");
   };
   
   const updateQuantity = (id, size, amount) => {
@@ -59,7 +62,10 @@ export const CartProvider = ({ children }) => {
   };
 
   const toggleCart = () => setIsCartOpen(!isCartOpen);
-  const clearCart = () => setCart([]);
+  const clearCart = () => {
+    setCart([]);
+    localStorage.removeItem('fiebriticos_cart');
+  };
 
   const cartTotal = cart.reduce((acc, item) => {
     const price = item.discountPrice || item.price;
@@ -69,7 +75,18 @@ export const CartProvider = ({ children }) => {
   const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
 
   return (
-    <CartContext.Provider value={{ cart, addToCart, removeFromCart, updateQuantity, clearCart, toggleCart, isCartOpen, setIsCartOpen, cartTotal, cartCount }}>
+    <CartContext.Provider value={{ 
+      cart, 
+      addToCart, 
+      removeFromCart, 
+      updateQuantity, 
+      clearCart, 
+      toggleCart, 
+      isCartOpen, 
+      setIsCartOpen, 
+      cartTotal, 
+      cartCount 
+    }}>
       {children}
     </CartContext.Provider>
   );

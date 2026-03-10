@@ -1,19 +1,16 @@
-// src/components/Medidas.jsx
 import React, { useEffect } from "react";
 import { createPortal } from "react-dom";
-import { FaTimes } from "react-icons/fa";
+import { FaTimes, FaFutbol, FaChevronRight } from "react-icons/fa";
+import { LiaRulerSolid } from "react-icons/lia";
 import { motion, AnimatePresence } from "framer-motion"; 
 
 // 🔽 Importamos las imágenes
 import fanImg from "../assets/Fan.png";
 import playerImg from "../assets/Player.png";
 
-// 🎨 Gradiente Plateado
-const silverGradient = "linear-gradient(135deg, #e0e0e0 0%, #ffffff 50%, #d1d1d1 100%)";
-
 export default function Medidas({ open, onClose }) {
   
-  // Bloquear scroll del body (fondo de la web)
+  // Bloquear scroll del body
   useEffect(() => {
     if (open) {
       document.body.style.overflow = "hidden";
@@ -26,83 +23,115 @@ export default function Medidas({ open, onClose }) {
   if (!open) return null;
 
   const CATALOG = [
-    { key: "Player", label: "Versión Player (Ajustada)", img: playerImg, desc: "Corte más pegado al cuerpo." },
-    { key: "Fan", label: "Versión Fan (Estándar)", img: fanImg, desc: "Corte recto y cómodo." },
+    { 
+      key: "Player", 
+      label: "Versión Player", 
+      badge: "Ajuste Pro",
+      img: playerImg, 
+      desc: "Corte atlético pegado al cuerpo. Ideal si prefieres lucir como el jugador en la cancha." 
+    },
+    { 
+      key: "Fan", 
+      label: "Versión Fan", 
+      badge: "Ajuste Cómodo",
+      img: fanImg, 
+      desc: "Corte recto y holgado. La opción clásica para el uso diario y máximo confort." 
+    },
   ];
 
   const modal = (
-    // 1. Contenedor PRINCIPAL con scroll (overflow-y-auto)
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/70 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[100] overflow-y-auto bg-fiebriAzul/60 backdrop-blur-md">
       
-      {/* 2. Wrapper para centrar y dar margen (min-h-screen permite scroll) */}
       <div 
         className="flex min-h-full items-center justify-center p-4 py-12"
-        onClick={onClose} // Cerrar al hacer click fuera
+        onClick={onClose}
       >
         
-        {/* 📦 3. TARJETA DEL MODAL (Sin límite de altura, crece con el contenido) */}
         <motion.div 
-          initial={{ scale: 0.9, opacity: 0, y: 20 }}
+          initial={{ scale: 0.9, opacity: 0, y: 30 }}
           animate={{ scale: 1, opacity: 1, y: 0 }}
-          exit={{ scale: 0.9, opacity: 0, y: 20 }}
-          transition={{ type: "spring", damping: 25, stiffness: 300 }}
-          className="relative bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden"
-          onClick={(e) => e.stopPropagation()} // Evitar cierre al clickear dentro
+          exit={{ scale: 0.9, opacity: 0, y: 30 }}
+          transition={{ type: "spring", damping: 25, stiffness: 350 }}
+          className="relative bg-white w-full max-w-xl rounded-[2.5rem] shadow-2xl overflow-hidden border-b-8 border-fiebriVerde"
+          onClick={(e) => e.stopPropagation()}
         >
           
-          {/* ❌ BOTÓN CERRAR */}
-          <button
-            onClick={onClose}
-            className="absolute top-4 right-4 z-20 bg-gray-100 hover:bg-gray-200 text-black p-2 rounded-full transition-all shadow-sm"
-            title="Cerrar"
-          >
-            <FaTimes size={18} />
-          </button>
+          {/* HEADER ESTILO FIEBRITICOS */}
+          <div className="bg-fiebriAzul p-8 text-center relative overflow-hidden">
+             {/* Balones de fondo decorativos */}
+             <FaFutbol className="absolute -top-4 -left-4 text-white/5 text-7xl rotate-12" />
+             
+             <button
+                onClick={onClose}
+                className="absolute top-5 right-5 text-white/50 hover:text-fiebriVerde transition-colors z-20"
+              >
+                <FaTimes size={24} />
+              </button>
 
-          {/* HEADER */}
-          <div className="text-center pt-8 pb-4 px-6 border-b border-gray-100 bg-white">
-            <h3 className="text-2xl font-black uppercase tracking-tight text-gray-900">
-              Guía de Tallas
-            </h3>
-            <p className="text-sm text-gray-500 mt-1">
-              Revisa las medidas para asegurar tu ajuste perfecto.
-            </p>
+              <div className="flex justify-center mb-2">
+                <div className="bg-fiebriVerde p-3 rounded-2xl shadow-lg">
+                  <LiaRulerSolid className="text-fiebriAzul text-3xl" />
+                </div>
+              </div>
+
+              <h3 className="text-3xl font-black italic uppercase tracking-tighter text-white">
+                Guía de <span className="text-fiebriVerde">Tallas</span>
+              </h3>
+              <p className="text-white/60 text-[10px] font-bold uppercase tracking-[0.2em] mt-2">
+                Asegura el ajuste perfecto para tu piel
+              </p>
           </div>
 
-          {/* 📜 BODY (Ahora fluye natural, sin scrolleo interno forzado) */}
-          <div className="p-6 space-y-8 bg-white">
-            {CATALOG.map(({ key, label, img, desc }) => (
-              <div key={key} className="bg-gray-50 rounded-xl overflow-hidden border border-gray-100 shadow-sm">
+          {/* BODY */}
+          <div className="p-8 space-y-10 bg-white">
+            
+            {CATALOG.map(({ key, label, badge, img, desc }) => (
+              <div key={key} className="relative">
                 
-                {/* Título de Sección Plateado */}
-                <div 
-                  className="py-2 px-4 text-center font-bold text-gray-800 uppercase tracking-wider text-sm shadow-sm"
-                  style={{ background: silverGradient }}
-                >
-                  {label}
+                {/* Título de Versión */}
+                <div className="flex items-center justify-between mb-4 px-2">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-8 bg-fiebriVerde rounded-full" />
+                    <h4 className="text-2xl font-black text-fiebriAzul uppercase italic tracking-tighter">
+                      {label}
+                    </h4>
+                  </div>
+                  <span className="bg-fiebriGris text-fiebriAzul text-[10px] font-black px-3 py-1 rounded-full uppercase">
+                    {badge}
+                  </span>
                 </div>
 
-                {/* Contenido e Imagen */}
-                <div className="p-4 flex flex-col items-center">
-                  <p className="text-xs text-gray-500 mb-3 italic">{desc}</p>
-                  <div className="w-full bg-white rounded-lg p-2 border border-gray-100">
+                {/* Descripción */}
+                <p className="text-gray-500 text-sm mb-6 px-2 font-medium leading-relaxed">
+                  {desc}
+                </p>
+
+                {/* Contenedor de Imagen (Marco Pro) */}
+                <div className="bg-fiebriGris rounded-[2rem] p-4 border-2 border-gray-50 shadow-inner group hover:border-fiebriVerde/30 transition-all">
+                  <div className="bg-white rounded-[1.5rem] p-4 shadow-sm">
                     <img
                       src={img}
-                      alt={`Guía de medidas ${label}`}
-                      className="w-full h-auto object-contain"
+                      alt={`Medidas ${label}`}
+                      className="w-full h-auto object-contain transition-transform group-hover:scale-[1.02]"
                     />
                   </div>
                 </div>
               </div>
             ))}
 
-            {/* Botón Cerrar Inferior */}
-            <button
-              onClick={onClose}
-              className="w-full py-3 rounded-xl font-bold bg-black text-white hover:bg-gray-800 transition-all shadow-lg"
-            >
-              Entendido
-            </button>
+            {/* BOTÓN DE CIERRE (ESTILO CAJA) */}
+            <div className="pt-4">
+              <button
+                onClick={onClose}
+                className="boton-fiebri-verde w-full py-5 rounded-2xl text-white font-black text-xl shadow-xl flex items-center justify-center gap-3 uppercase tracking-tighter italic"
+              >
+                ¡ENTENDIDO, A JUGAR! <FaFutbol />
+              </button>
+              
+              <p className="text-center text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-6">
+                Fiebriticos CR • Especialistas en Calidad
+              </p>
+            </div>
           </div>
         </motion.div>
       </div>

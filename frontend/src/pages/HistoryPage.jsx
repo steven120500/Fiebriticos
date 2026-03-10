@@ -1,11 +1,11 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
-import { FaHistory, FaTrash, FaUser, FaCalendarAlt, FaArrowLeft, FaSearch } from "react-icons/fa";
+import { FaHistory, FaTrash, FaUser, FaCalendarAlt, FaArrowLeft, FaSearch, FaFutbol } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import Footer from "../components/Footer";
 
-const API_BASE = "https://fiebriticos.onrender.com";
-
+// ✅ Usamos la variable de entorno para la API
+const API_BASE = import.meta.env.VITE_API_URL || "https://fiebriticos.onrender.com";
 
 export default function HistoryPage({ user }) {
   const [logs, setLogs] = useState([]);
@@ -14,7 +14,6 @@ export default function HistoryPage({ user }) {
   const [selectedDate, setSelectedDate] = useState(""); 
   const navigate = useNavigate();
 
-  // Mantenemos la lógica de permisos para seguridad
   const isSuperUser = user?.isSuperUser || false;
 
   const fetchHistory = async () => {
@@ -61,7 +60,7 @@ export default function HistoryPage({ user }) {
         headers: { "Content-Type": "application/json", "x-super": isSuperUser ? "true" : "false" },
       });
       if (!res.ok) throw new Error();
-      toast.success("Historial limpiado.");
+      toast.success("Historial limpiado correctamente.");
       setLogs([]);
     } catch {
       toast.error("Error al limpiar.");
@@ -75,65 +74,66 @@ export default function HistoryPage({ user }) {
     if (!term) return logs;
     return logs.filter((log) => 
       String(log.item || log.productName || "").toLowerCase().includes(term) ||
-      String(log.user || "").toLowerCase().includes(term)
+      String(log.user || "").toLowerCase().includes(term) ||
+      String(log.action || "").toLowerCase().includes(term)
     );
   }, [logs, q]);
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col font-sans">
-      <div className="flex-grow pt-32 sm:pt-44 px-4 md:px-8 max-w-6xl mx-auto w-full box-border">
+    <div className="min-h-screen bg-fiebriGris flex flex-col font-poppins">
+      <div className="flex-grow pt-32 sm:pt-40 px-4 md:px-8 max-w-6xl mx-auto w-full box-border">
         
         {/* BOTÓN VOLVER */}
-        <div className="flex justify-start mb-6">
+        <div className="flex justify-start mb-8">
             <button 
                 onClick={() => navigate(-1)} 
-                className="flex items-center gap-2 px-4 py-2 bg-zinc-900 border border-zinc-800 rounded-full text-zinc-400 hover:text-white transition-all font-bold text-[10px] uppercase tracking-widest"
+                className="flex items-center gap-2 px-6 py-2.5 bg-white text-fiebriAzul border border-gray-200 rounded-2xl hover:bg-fiebriAzul hover:text-white transition-all font-black text-[10px] uppercase tracking-widest shadow-sm"
             >
-                <FaArrowLeft /> Volver
+                <FaArrowLeft /> Regresar al Panel
             </button>
         </div>
 
         {/* HEADER Y FILTROS */}
-        <div className="flex flex-col mb-10 border-b border-zinc-800 pb-8 gap-6">
+        <div className="flex flex-col mb-10 gap-8">
           <div className="flex items-center gap-4">
-            <div className="bg-[#D4AF37] p-3 rounded-2xl flex-shrink-0">
-                <FaHistory className="text-black text-xl" />
+            <div className="bg-fiebriAzul p-4 rounded-[1.5rem] shadow-xl shadow-fiebriAzul/20">
+                <FaHistory className="text-fiebriVerde text-2xl" />
             </div>
-            <h1 className="text-2xl sm:text-4xl font-black italic uppercase tracking-tighter truncate">Bitácora de Cambios</h1>
+            <div>
+                <h1 className="text-3xl sm:text-5xl font-black italic uppercase tracking-tighter text-fiebriAzul">Bitácora <span className="text-fiebriVerde text-shadow-sm">VAR</span></h1>
+                <p className="text-gray-400 font-bold text-[10px] uppercase tracking-[0.2em] mt-1">Control de movimientos del staff</p>
+            </div>
           </div>
 
           {/* FILTROS RESPONSIVOS */}
-          <div className="flex flex-col gap-3 w-full">
+          <div className="flex flex-col gap-4 w-full bg-white p-6 rounded-[2rem] shadow-sm border border-gray-100">
             
             {/* Buscador */}
             <div className="relative w-full">
-              <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" />
+              <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" />
               <input
                 type="text"
-                placeholder="Buscar producto o admin..."
+                placeholder="Buscar por equipo, admin o acción..."
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
-                className="w-full bg-white border border-zinc-300 rounded-xl pl-11 pr-4 py-3 text-sm text-black font-bold outline-none focus:border-[#D4AF37] transition-all box-border"
+                className="w-full bg-fiebriGris border-none rounded-2xl pl-12 pr-4 py-4 text-sm text-fiebriAzul font-bold outline-none focus:ring-2 focus:ring-fiebriVerde transition-all"
               />
             </div>
 
-            {/* Fecha y Botón Limpiar (Línea compartida en tablets/PC, apilada en móvil si es necesario) */}
-            <div className="flex flex-col sm:flex-row gap-2 w-full">
+            <div className="flex flex-col sm:flex-row gap-4 w-full">
                 <input
                     type="date"
                     value={selectedDate}
                     onChange={(e) => setSelectedDate(e.target.value)}
-                    className="flex-grow bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3 text-sm text-[#D4AF37] font-bold outline-none box-border"
-                    style={{ colorScheme: 'dark' }} 
+                    className="flex-grow bg-fiebriGris border-none rounded-2xl px-5 py-4 text-sm text-fiebriAzul font-black outline-none focus:ring-2 focus:ring-fiebriAzul cursor-pointer"
                 />
 
-                {/* 👇 BOTÓN LIMPIAR REINSTALADO 👇 */}
                 {isSuperUser && (
                     <button 
                         onClick={handleClear} 
-                        className="w-full sm:w-auto bg-red-600 text-white px-8 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-red-700 transition-all shadow-lg active:scale-95"
+                        className="w-full sm:w-auto bg-red-50 text-red-500 px-8 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all shadow-sm active:scale-95 border-2 border-red-100"
                     >
-                        LIMPIAR TODO
+                        Limpiar Historial
                     </button>
                 )}
             </div>
@@ -142,52 +142,66 @@ export default function HistoryPage({ user }) {
 
         {/* LISTADO */}
         {loading ? (
-          <div className="text-center py-20 flex flex-col items-center">
-             <div className="w-8 h-8 border-4 border-[#D4AF37] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-             <p className="text-zinc-500 font-black text-[10px] uppercase tracking-widest">Sincronizando registros...</p>
+          <div className="text-center py-24 flex flex-col items-center">
+             <FaFutbol className="text-fiebriAzul/20 text-5xl animate-spin mb-4" />
+             <p className="text-gray-400 font-black text-[10px] uppercase tracking-[0.3em]">Sincronizando con el servidor...</p>
           </div>
         ) : filteredLogs.length === 0 ? (
-          <div className="text-center py-20 bg-zinc-900/20 rounded-3xl border border-dashed border-zinc-800 px-6">
-            <p className="text-zinc-500 font-bold uppercase tracking-widest text-xs">
-              {selectedDate ? `No hay cambios registrados para el ${new Date(selectedDate).toLocaleDateString()}` : "No hay actividad registrada"}
+          <div className="text-center py-32 bg-white rounded-[3rem] border-2 border-dashed border-gray-100 px-6">
+            <FaHistory className="text-gray-200 text-6xl mx-auto mb-6" />
+            <p className="text-fiebriAzul font-black uppercase tracking-widest text-sm">
+              {selectedDate ? `No hay jugadas registradas el ${new Date(selectedDate).toLocaleDateString()}` : "Sin actividad en la bitácora"}
             </p>
             {selectedDate && (
-                <button onClick={() => setSelectedDate("")} className="mt-4 text-[#D4AF37] text-[10px] font-black uppercase tracking-widest underline">Ver todo el historial</button>
+                <button onClick={() => setSelectedDate("")} className="mt-6 text-fiebriVerde text-[11px] font-black uppercase tracking-widest hover:underline">Ver historial completo</button>
             )}
           </div>
         ) : (
-          <div className="flex flex-col gap-4 mb-24">
+          <div className="flex flex-col gap-6 mb-24">
             {filteredLogs.map((log, idx) => (
-              <div key={log._id || idx} className="bg-zinc-900/40 border border-zinc-800 p-5 rounded-2xl hover:border-zinc-700 transition-all group overflow-hidden">
+              <div key={log._id || idx} className="bg-white border border-gray-100 p-6 rounded-[2rem] shadow-sm hover:shadow-xl hover:shadow-fiebriAzul/5 transition-all group relative overflow-hidden">
+                
+                {/* Indicador de acción lateral */}
+                <div className={`absolute left-0 top-0 bottom-0 w-2 ${log.action?.toLowerCase().includes('eliminar') ? 'bg-red-500' : 'bg-fiebriVerde'}`} />
+
                 <div className="flex flex-col gap-4">
-                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-zinc-800/50 pb-3">
+                  <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-50 pb-4">
                     <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-zinc-800 rounded-lg flex items-center justify-center text-[#D4AF37] flex-shrink-0">
-                            <FaUser size={12} />
+                        <div className="w-10 h-10 bg-fiebriGris rounded-xl flex items-center justify-center text-fiebriAzul flex-shrink-0 group-hover:bg-fiebriAzul group-hover:text-white transition-colors">
+                            <FaUser size={14} />
                         </div>
-                        <p className="font-black uppercase text-[10px] tracking-widest text-zinc-400">
-                            <span className="text-white">{log.user}</span> <span className="font-normal lowercase mx-1 text-zinc-600">realizó</span> {log.action}
-                        </p>
+                        <div>
+                            <p className="font-black uppercase text-[11px] tracking-tight text-fiebriAzul">
+                                {log.user}
+                            </p>
+                            <span className="text-[9px] font-black uppercase tracking-widest text-fiebriVerde bg-fiebriVerde/5 px-2 py-0.5 rounded-full">
+                                {log.action}
+                            </span>
+                        </div>
                     </div>
-                    <span className="text-[8px] font-mono text-zinc-700 bg-black px-2 py-1 rounded border border-zinc-800 uppercase">ID: {log.productId?.substring(0,8) || log._id?.substring(16)}</span>
+                    <span className="text-[9px] font-black text-gray-300 bg-fiebriGris px-3 py-1 rounded-full uppercase tracking-tighter">REF: {log.productId?.substring(0,8) || log._id?.substring(18)}</span>
                   </div>
 
-                  <h2 className="text-white font-bold text-lg sm:text-xl italic leading-tight group-hover:text-[#D4AF37] transition-colors break-words">
+                  <h2 className="text-fiebriAzul font-black text-2xl sm:text-3xl italic uppercase tracking-tighter leading-tight group-hover:text-fiebriVerde transition-colors">
                     {log.item || log.productName}
                   </h2>
 
-                  <div className="flex items-center gap-2 text-zinc-400 font-bold text-[9px] uppercase tracking-widest bg-black/40 w-fit px-2 py-1 rounded">
-                    <FaCalendarAlt className="text-zinc-600" /> 
+                  <div className="flex items-center gap-2 text-gray-400 font-bold text-[10px] uppercase tracking-widest">
+                    <FaCalendarAlt className="text-fiebriVerde" /> 
                     {log.date ? new Date(log.date).toLocaleString() : new Date(log.createdAt).toLocaleString()}
                   </div>
                   
                   {log.details && (
-                    <div className="mt-2 bg-black/60 p-4 rounded-xl border border-zinc-800/50 overflow-hidden">
-                      <p className="text-[8px] text-zinc-600 uppercase font-black mb-2 tracking-widest">Cambios detectados:</p>
-                      <pre className="text-[10px] text-zinc-400 font-mono overflow-x-auto whitespace-pre-wrap break-words leading-relaxed">
-                        {typeof log.details === "string" ? log.details : JSON.stringify(log.details, null, 2)}
-                      </pre>
-                    </div>
+                    <details className="mt-2 group/details">
+                      <summary className="text-[10px] font-black text-fiebriAzul/40 cursor-pointer uppercase tracking-widest list-none hover:text-fiebriAzul transition-colors">
+                        Ver detalles técnicos [+]
+                      </summary>
+                      <div className="mt-4 bg-fiebriGris p-5 rounded-2xl border border-gray-100 overflow-hidden">
+                        <pre className="text-[11px] text-fiebriAzul/70 font-mono overflow-x-auto whitespace-pre-wrap break-words leading-relaxed">
+                          {typeof log.details === "string" ? log.details : JSON.stringify(log.details, null, 2)}
+                        </pre>
+                      </div>
+                    </details>
                   )}
                 </div>
               </div>

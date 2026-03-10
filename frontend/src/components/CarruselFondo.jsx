@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-export default function CarruselFondo({ imagenes = [], intervalo = 7000 }) {
+export default function CarruselFondo({ imagenes = [], intervalo = 8000 }) {
   const [index, setIndex] = useState(0);
 
   useEffect(() => {
@@ -12,34 +12,37 @@ export default function CarruselFondo({ imagenes = [], intervalo = 7000 }) {
   }, [imagenes, intervalo]);
 
   return (
-    <div className="absolute inset-0 overflow-hidden">
-      {/* 🔹 Imágenes de fondo con difuminado + leve zoom */}
+    <div className="absolute inset-0 overflow-hidden bg-fiebriAzul">
+      {/* 🖼️ Imágenes con efecto "Ken Burns" (zoom lento cinemático) */}
       {imagenes.map((img, i) => (
         <div
           key={i}
-          className={`absolute inset-0 bg-cover bg-center transition-opacity duration-[2000ms] ease-in-out ${
-            i === index ? "opacity-100 scale-105 z-10" : "opacity-0 scale-100 z-0"
+          className={`absolute inset-0 bg-cover bg-center transition-all duration-[3000ms] ease-in-out ${
+            i === index ? "opacity-40 scale-110 z-10" : "opacity-0 scale-100 z-0"
           }`}
           style={{
             backgroundImage: `url(${img})`,
-            transition: "opacity 2s ease-in-out, transform 8s ease-in-out",
+            // El zoom dura más que la transición de opacidad para un efecto más suave
+            transition: "opacity 3s ease-in-out, transform 12s linear",
           }}
         />
       ))}
 
-      {/* 🔸 Sombra oscura para legibilidad del texto */}
-      <div className="absolute inset-0 bg-black/60"></div>
+      {/* 🔸 Overlay con degradado Azul Fiebriticos (Filtro Pro) */}
+      <div className="absolute inset-0 z-10 bg-gradient-to-b from-fiebriAzul/60 via-fiebriAzul/40 to-fiebriAzul"></div>
 
-      {/* ⚪ Indicadores (bolitas) */}
-      <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex gap-3 z-20">
+      {/* ⚪ Indicadores (Estilo Fiebriticos) */}
+      <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2 flex gap-3 z-30">
         {imagenes.map((_, i) => (
-          <span
+          <button
             key={i}
-            className={`w-3 h-3 rounded-full transition-all duration-500 ${
+            onClick={() => setIndex(i)}
+            className={`h-2 rounded-full transition-all duration-700 ${
               i === index
-                ? "bg-white scale-125 shadow-lg"
-                : "bg-gray-400 opacity-70 hover:opacity-100"
+                ? "w-10 bg-fiebriVerde shadow-[0_0_15px_rgba(34,197,94,0.8)]"
+                : "w-2 bg-white/30 hover:bg-white/60"
             }`}
+            aria-label={`Ir a imagen ${i + 1}`}
           />
         ))}
       </div>

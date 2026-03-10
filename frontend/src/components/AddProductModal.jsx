@@ -45,31 +45,21 @@ async function convertToWebpBlob(file, maxWidth = MAX_WIDTH, quality = QUALITY) 
   return blob;
 }
 
-// 🔹 Convierte src a Blob
 async function srcToBlob(src) {
   if (!src) throw new Error("Imagen sin src");
-
   if (src.startsWith("blob:") || src.startsWith("http")) {
     const r = await fetch(src);
     if (!r.ok) throw new Error("No se pudo leer blob/url");
     return await r.blob();
   }
-
   if (src.startsWith("data:")) {
     const parts = src.split(",");
-    if (parts.length < 2) throw new Error("dataURL inválido");
-    const meta = parts[0];
-    const b64 = parts[1];
-    const mimeMatch = meta.match(/data:(.*?);base64/);
-    const mime = mimeMatch ? mimeMatch[1] : "application/octet-stream";
-
-    const bin = atob(b64);
+    const bin = atob(parts[1]);
     const u8 = new Uint8Array(bin.length);
     for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
-    return new Blob([u8], { type: mime });
+    return new Blob([u8], { type: "image/webp" });
   }
-
-  throw new Error("Formato de imagen no soportado");
+  throw new Error("Formato no soportado");
 }
 
 export default function AddProductModal({ onAdd, onCancel, user }) {
@@ -83,20 +73,12 @@ export default function AddProductModal({ onAdd, onCancel, user }) {
   const [loading, setLoading] = useState(false);
 
   const fileInputRef = useRef(null);
-  const modalRef = useRef(null);
 
   useEffect(() => {
     document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = "auto";
-      setImages((prev) => {
-        prev.forEach((it) => it.previewUrl && URL.revokeObjectURL(it.previewUrl));
-        return [];
-      });
-    };
+    return () => { document.body.style.overflow = "auto"; };
   }, []);
 
-  // 🔹 Agregar Balón al listado de tipos
   const tallas = useMemo(() => {
     const tipos = { ...tallaPorTipo, Balón: ["3", "4", "5"] };
     return tipos[type] || [];
@@ -105,91 +87,60 @@ export default function AddProductModal({ onAdd, onCancel, user }) {
   const handleFiles = async (filesLike) => {
     const files = Array.from(filesLike).slice(0, MAX_IMAGES - images.length);
     if (files.length === 0) return;
-
     try {
       setLoading(true);
       const converted = [];
-
       for (const file of files) {
-        if (!file.type.startsWith("image/")) {
-          toast.error("Formato de imagen no soportado");
-          continue;
-        }
         const blob = await convertToWebpBlob(file);
         const previewUrl = URL.createObjectURL(blob);
         converted.push({ blob, previewUrl });
       }
-
-      if (converted.length) {
-        setImages((prev) => [...prev, ...converted].slice(0, MAX_IMAGES));
-        toast.success("Imágenes optimizadas a WebP");
-      }
+      setImages((prev) => [...prev, ...converted].slice(0, MAX_IMAGES));
     } catch (err) {
-      console.error(err);
-      toast.error(err.message || "No se pudo optimizar la imagen");
+      toast.error("Error optimizando imagen");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleFileChange = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    await handleFiles([file]);
-    e.target.value = "";
-  };
-
   const handleRemoveImage = (index) => {
     setImages((prev) => {
       const copy = prev.slice();
-      const item = copy[index];
-      if (item?.previewUrl) URL.revokeObjectURL(item.previewUrl);
+      if (copy[index]?.previewUrl) URL.revokeObjectURL(copy[index].previewUrl);
       copy.splice(index, 1);
       return copy;
     });
   };
 
-  // ✅ Captura de inventario
   const handleInvChange = (size, value) => {
     const num = value === "" ? 0 : Math.max(0, parseInt(value, 10) || 0);
     setStock((prev) => ({ ...prev, [size]: num }));
   };
 
-  // ✅ Envío de formulario
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (loading) return;
-
     try {
       setLoading(true);
-
-      if (!name.trim() || !price || !type.trim()) {
-        toast.error("Completá nombre, precio y tipo.");
-        return;
-      }
-      if (!images.length) {
-        toast.error("Agregá al menos una imagen.");
+      if (!name.trim() || !price || !type.trim() || !images.length) {
+        toast.error("Faltan datos obligatorios");
         return;
       }
 
-      const displayName = user?.username || "ChemaSportER";
-
-      // ✅ Asegurar stock completo
-      const stockFinal = Object.keys(stock).length
-        ? stock
-        : Object.fromEntries(tallas.map((t) => [t, 0]));
+      // ✅ CAMBIO: Ahora el nombre por defecto es Fiebriticos
+      const displayName = user?.username || "Fiebriticos";
 
       const formData = new FormData();
       formData.append("name", name.trim());
       formData.append("price", String(price).trim());
       if (discountPrice) formData.append("discountPrice", String(discountPrice).trim());
       formData.append("type", type.trim());
-      formData.append("stock", JSON.stringify(stockFinal));
+      formData.append("stock", JSON.stringify(stock));
       formData.append("isNew", isNew ? "true" : "false");
 
       for (let i = 0; i < images.length; i++) {
         const blob = images[i].blob || (await srcToBlob(images[i].src));
-        formData.append("images", blob, `product-${i}.webp`);
+        formData.append("images", blob, `fiebri-${i}.webp`);
       }
 
       const res = await fetch(`${API_BASE}/api/products`, {
@@ -198,161 +149,135 @@ export default function AddProductModal({ onAdd, onCancel, user }) {
         body: formData,
       });
 
-      if (!res.ok) {
-        const txt = await res.text().catch(() => "");
-        throw new Error(`Error al guardar producto (${res.status}). ${txt || ""}`.trim());
-      }
-
+      if (!res.ok) throw new Error("Error al guardar");
       const data = await res.json();
       onAdd?.(data);
       onCancel?.();
+      toast.success("¡Producto listo en el catálogo!");
     } catch (err) {
-      console.error(err);
-      toast.error(err.message || "Error guardando el producto");
+      toast.error("Error guardando producto");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div
-      ref={modalRef}
-      className="mt-28 mb-24 fixed inset-0 z-50 bg-black/40 flex items-center justify-center py-6"
-    >
-      <div className="pt-12 pb-24 relative bg-white p-6 rounded-lg shadow-md max-w-md w-full max-h-screen overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400">
-        {/* Botón cerrar */}
+    <div className="fixed inset-0 z-50 bg-fiebriAzul/60 backdrop-blur-sm flex items-center justify-center p-4">
+      <div className="bg-white p-6 rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto scrollbar-thin scrollbar-thumb-fiebriAzul relative">
+        
+        {/* Botón cerrar - Ahora Azul Fiebri */}
         <button
           onClick={onCancel}
-          className="absolute fondo-plateado top-6 right-2 text-white bg-black rounded p-1"
+          className="absolute top-4 right-4 text-gray-400 hover:text-fiebriAzul transition-colors"
         >
-          <FaTimes size={30} />
+          <FaTimes size={24} />
         </button>
 
-        <h2 className="text-lg font-semibold mb-4">Agregar producto</h2>
+        <h2 className="text-2xl font-bold text-fiebriAzul mb-2">Nuevo Producto</h2>
+        <p className="text-gray-500 text-sm mb-6">Subí las fotos y definí el inventario.</p>
 
-        {/* Info imágenes */}
-        <p className="text-gray-500 mb-2">
-          Arrastrá y soltá hasta {MAX_IMAGES} imagen(es) o hacé clic para seleccionar (se convertirán a WebP)
-        </p>
-
-        {/* Previews */}
-        <div className="flex gap-2 justify-center flex-wrap mb-3">
+        {/* Previews de imágenes */}
+        <div className="flex gap-3 justify-center mb-6">
           {images.map((img, i) => (
-            <div key={`preview-${i}`} className="relative">
-              <img src={img.previewUrl} alt={`preview-${i}`} className="w-24 h-24 object-cover rounded" />
+            <div key={i} className="relative group">
+              <img src={img.previewUrl} className="w-24 h-24 object-cover rounded-xl border-2 border-fiebriGris" />
               <button
-                onClick={(e) => { e.stopPropagation(); handleRemoveImage(i); }}
-                className="absolute -top-1 -right-1 text-white text-xs rounded-full px-1"
-                style={{ backgroundColor: "#d4af37", color: "#000" }}
+                onClick={() => handleRemoveImage(i)}
+                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center shadow-lg hover:scale-110 transition"
               >
                 ✕
               </button>
             </div>
           ))}
+          {images.length < MAX_IMAGES && (
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="w-24 h-24 border-2 border-dashed border-gray-300 rounded-xl flex items-center justify-center text-gray-400 hover:border-fiebriVerde hover:text-fiebriVerde transition-all"
+            >
+              +
+            </button>
+          )}
+          <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFiles} />
         </div>
 
-        {/* Input imagen */}
-        {images.length < MAX_IMAGES && (
-          <div className="mb-4">
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              className="border-2 text-white border-dashed border-gray-300 p-2 rounded w-full text-center"
-            >
-              Seleccionar imagen
-            </button>
+        {/* Formulario */}
+        <div className="space-y-4">
+          <input
+            type="text"
+            placeholder="Nombre (ej: Camiseta Real Madrid 2024)"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="w-full px-4 py-3 bg-fiebriGris border-none rounded-xl focus:ring-2 focus:ring-fiebriAzul"
+          />
+
+          <div className="grid grid-cols-2 gap-3">
             <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleFileChange}
+              type="number"
+              placeholder="Precio (₡)"
+              value={price}
+              onChange={(e) => setPrice(e.target.value)}
+              className="w-full px-4 py-3 bg-fiebriGris border-none rounded-xl focus:ring-2 focus:ring-fiebriAzul"
+            />
+            <input
+              type="number"
+              placeholder="Descuento (₡)"
+              value={discountPrice}
+              onChange={(e) => setDiscountPrice(e.target.value)}
+              className="w-full px-4 py-3 bg-fiebriGris border-none rounded-xl focus:ring-2 focus:ring-fiebriAzul"
             />
           </div>
-        )}
 
-        {/* Campos básicos */}
-        <input
-          type="text"
-          placeholder="Nombre del producto"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          className="w-full px-4 py-2 border border-gray-300 rounded mb-3"
-        />
+          <select
+            value={type}
+            onChange={(e) => setType(e.target.value)}
+            className="w-full px-4 py-3 bg-fiebriGris border-none rounded-xl focus:ring-2 focus:ring-fiebriAzul"
+          >
+            {Object.keys({ ...tallaPorTipo, Balón: ["3", "4", "5"] }).map((t) => (
+              <option key={t} value={t}>{t}</option>
+            ))}
+          </select>
 
-        <input
-          type="text"
-          placeholder="Precio normal (₡)"
-          value={price}
-          onChange={(e) => setPrice(e.target.value)}
-          className="w-full px-4 py-2 border border-gray-300 rounded mb-3"
-        />
+          <label className="flex items-center gap-3 cursor-pointer p-2">
+            <input
+              type="checkbox"
+              checked={isNew}
+              onChange={(e) => setIsNew(e.target.checked)}
+              className="w-5 h-5 text-fiebriVerde rounded focus:ring-fiebriVerde"
+            />
+            <span className="text-gray-700 font-medium">Marcar como producto nuevo</span>
+          </label>
 
-        <input
-          type="text"
-          placeholder="Precio con descuento (opcional)"
-          value={discountPrice}
-          onChange={(e) => setDiscountPrice(e.target.value)}
-          className="w-full px-4 py-2 border border-gray-300 rounded mb-3"
-        />
+          {/* Inventario */}
+          <div className="bg-fiebriGris p-4 rounded-xl">
+            <p className="text-xs font-bold text-gray-400 uppercase mb-3 tracking-wider">Inventario por talla</p>
+            <div className="grid grid-cols-4 gap-2">
+              {tallas.map((size) => (
+                <div key={size} className="flex flex-col items-center">
+                  <span className="text-xs font-bold text-fiebriAzul mb-1">{size}</span>
+                  <input
+                    type="number"
+                    value={stock[size] ?? ""}
+                    onChange={(e) => handleInvChange(size, e.target.value)}
+                    className="w-full py-1 text-center bg-white rounded-lg border border-gray-200 focus:border-fiebriVerde focus:ring-0 text-sm"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
 
-        <select
-          value={type}
-          onChange={(e) => setType(e.target.value)}
-          className="w-full px-4 py-2 border border-gray-300 rounded mb-4"
-        >
-          {Object.keys({ ...tallaPorTipo, Balón: ["3", "4", "5"] }).map((t) => (
-            <option key={t} value={t}>{t}</option>
-          ))}
-        </select>
-
-        {/* Checkbox NUEVO */}
-        <label className="flex items-center gap-2 mb-4 select-none">
-          <input
-            type="checkbox"
-            checked={isNew}
-            onChange={(e) => setIsNew(e.target.checked)}
-          />
-          <span className="text-sm">
-            Mostrar etiqueta <strong>NUEVO</strong>
-          </span>
-        </label>
-
-        {/* Stock */}
-        
-
-{/* Stock */}
-<div className="grid grid-cols-3 gap-3 mb-6">
-  {tallas.map((size) => (
-    <label key={size} className="text-center">
-      <span className="block mb-1 text-sm font-medium">{size}</span>
-      <input
-        type="number"
-        min="0"
-        value={stock[size] ?? ""}
-        onChange={(e) => handleInvChange(size, e.target.value)}
-        className="w-full px-2 py-1 border border-gray-300 rounded text-center"
-        inputMode="numeric"
-      />
-    </label>
-  ))}
-</div>
-
-
-        {/* Botones */}
-        <div className="flex gap-2">
+        {/* Botones de acción */}
+        <div className="mt-8 flex gap-3">
           <button
-            type="button"
             onClick={handleSubmit}
             disabled={loading}
-            className="flex-1 fondo-plateado text-black py-2 rounded hover:brightness-110 transition disabled:opacity-60"
+            className="flex-1 boton-fiebri-verde py-4 rounded-xl text-white font-bold disabled:opacity-50"
           >
-            {loading ? "Agregando..." : "Agregar producto"}
+            {loading ? "Guardando..." : "Publicar Producto"}
           </button>
           <button
-            type="button"
             onClick={onCancel}
-            className="px-4 py-2 border bg-red-600 text-white rounded"
+            className="px-6 py-4 bg-gray-100 text-gray-600 font-bold rounded-xl hover:bg-gray-200 transition"
           >
             Cancelar
           </button>

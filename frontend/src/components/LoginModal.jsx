@@ -1,30 +1,29 @@
 import { useEffect, useState, useRef } from 'react';
 import { toast } from 'react-toastify';
-import { FiEye, FiEyeOff, FiX, FiPhone } from 'react-icons/fi';
+// 🔹 Corregimos: Separamos los iconos por su familia (Fi y Fa)
+import { FiEye, FiEyeOff, FiX, FiPhone, FiMail, FiLock, FiUser } from 'react-icons/fi';
+import { FaFutbol } from 'react-icons/fa'; 
+import { motion, AnimatePresence } from 'framer-motion';
 import 'react-toastify/dist/ReactToastify.css';
 
 const API_BASE = import.meta.env.VITE_API_URL || "https://fiebriticos.onrender.com";
 
 export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
-  // Estados de campos
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName]   = useState('');
   const [email, setEmail]         = useState('');
   const [phone, setPhone]         = useState('');
   const [password, setPassword]   = useState('');
   
-  // Modos: 'login', 'register', 'forgot'
   const [mode, setMode] = useState('login'); 
   const [showPassword, setShowPassword] = useState(false);
   const cardRef = useRef(null);
 
-  // 🛡️ Validaciones de contraseña
   const hasUpper  = /[A-Z]/.test(password);
   const hasNumber = /\d/.test(password);
   const hasLength = password.length >= 6;
   const isPasswordValid = hasUpper && hasNumber && hasLength;
 
-  // Limpiar estados al cambiar de modo o cerrar
   useEffect(() => {
     if (isOpen) {
       setFirstName(''); setLastName(''); setEmail(''); 
@@ -32,32 +31,21 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
     }
   }, [isOpen, mode]);
 
-  useEffect(() => {
-    if (!isOpen) return;
-    const onKey = (e) => e.key === 'Escape' && onClose?.();
-    document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
-  }, [isOpen, onClose]);
-
   if (!isOpen) return null;
 
-  // Manejador para que el teléfono solo acepte números y máx 8 dígitos
   const handlePhoneChange = (e) => {
-    const value = e.target.value.replace(/\D/g, ''); // Solo números
+    const value = e.target.value.replace(/\D/g, ''); 
     if (value.length <= 8) setPhone(value);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    // 1. Validación de Correo (Común para todos)
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!email || !emailRegex.test(email)) {
       toast.error('Ingresa un correo electrónico válido');
       return;
     }
 
-    // 2. Lógica según el modo
     try {
       if (mode === 'forgot') {
         const res = await fetch(`${API_BASE}/api/auth/forgot-password`, {
@@ -65,27 +53,13 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email }),
         });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.message);
-        toast.success('Enlace de recuperación enviado al correo');
+        if (!res.ok) throw new Error();
+        toast.success('Enlace enviado. El administrador puede verlo en la consola.');
         setMode('login');
         return;
       }
 
-      if (mode === 'register') {
-        if (!firstName || !lastName || phone.length !== 8) {
-          toast.warn('Nombre, Apellido y Celular (8 dígitos) son obligatorios');
-          return;
-        }
-        if (!isPasswordValid) {
-          toast.error('La contraseña no cumple los requisitos');
-          return;
-        }
-      }
-
       const endpoint = mode === 'register' ? 'register' : 'login';
-      
-      // 👇 AQUÍ ESTÁ LA MAGIA: Se agregó "username: email" para evitar el error de MongoDB
       const payload = mode === 'register' 
         ? { username: email, firstName, lastName, email, phone, password } 
         : { email, password };
@@ -100,7 +74,7 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
       if (!res.ok) throw new Error(data.message || 'Error en la solicitud');
 
       if (mode === 'register') {
-        toast.success('¡Registro exitoso! Ya puedes iniciar sesión.');
+        toast.success('¡Fichaje exitoso! Ya puedes entrar.');
         setMode('login');
       } else {
         const userData = {
@@ -116,7 +90,7 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
         localStorage.setItem('user', JSON.stringify(userData));
         onLoginSuccess?.(userData);
         onClose?.();
-        toast.success(`Bienvenido, ${data.firstName}`);
+        toast.success(`¡Hola, ${data.firstName}! Bienvenido al equipo.`);
       }
     } catch (err) {
       toast.error(err.message || 'Error de conexión');
@@ -124,121 +98,81 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
-      <div ref={cardRef} className="relative w-full max-w-sm rounded-xl bg-white shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-        
-        <button onClick={onClose} className="absolute right-3 top-2 p-1.5 rounded-md fondo-plateado text-black z-10 hover:brightness-90 transition">
-          <FiX size={20} />
-        </button>
-
-        <div className="pt-8 pb-2 text-center">
-          <h2 className="text-xl font-bold text-gray-800 uppercase tracking-tight">
-            {mode === 'login' && 'Iniciar Sesión'}
-            {mode === 'register' && 'Crear Cuenta'}
+    <div className="fixed inset-0 z-[999] flex items-center justify-center bg-fiebriAzul/60 backdrop-blur-md px-4">
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.9, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        className="relative w-full max-w-md rounded-[2.5rem] bg-white shadow-2xl overflow-hidden border-b-8 border-fiebriVerde"
+      >
+        <div className="bg-fiebriAzul p-8 text-center relative overflow-hidden">
+          <FaFutbol className="absolute -top-4 -left-4 text-white/5 text-7xl rotate-12" />
+          <button onClick={onClose} className="absolute right-5 top-5 text-white/50 hover:text-fiebriVerde transition-colors">
+            <FiX size={24} />
+          </button>
+          <h2 className="text-3xl font-black text-white italic uppercase tracking-tighter">
+            {mode === 'login' && 'Entrar al Club'}
+            {mode === 'register' && 'Nuevo Fichaje'}
             {mode === 'forgot' && 'Recuperar Clave'}
           </h2>
+          <p className="text-fiebriVerde font-bold text-[10px] uppercase tracking-widest mt-2">Fiebriticos CR</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="px-6 py-4 space-y-4">
-          
-          {mode === 'register' && (
-            <>
-              <div className="grid grid-cols-2 gap-3 animate-in fade-in slide-in-from-top-2">
-                <input
-                  type="text" placeholder="Nombre" value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-gray-300"
-                />
-                <input
-                  type="text" placeholder="Apellido" value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-gray-300"
-                />
-              </div>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"><FiPhone size={14}/></span>
-                <input
-                  type="text" placeholder="Celular (8 dígitos)" value={phone}
-                  onChange={handlePhoneChange}
-                  className="w-full rounded-lg border border-gray-300 pl-9 pr-3 py-2 text-sm outline-none focus:ring-2 focus:ring-gray-300"
-                />
-              </div>
-            </>
-          )}
+        <form onSubmit={handleSubmit} className="p-8 space-y-5">
+          <AnimatePresence mode='wait'>
+            {mode === 'register' && (
+              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="space-y-4">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="relative">
+                    <FiUser className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <input type="text" placeholder="Nombre" value={firstName} onChange={(e) => setFirstName(e.target.value)} className="w-full rounded-2xl bg-fiebriGris border-none pl-11 pr-4 py-3 text-sm focus:ring-2 focus:ring-fiebriAzul" />
+                  </div>
+                  <input type="text" placeholder="Apellido" value={lastName} onChange={(e) => setLastName(e.target.value)} className="w-full rounded-2xl bg-fiebriGris border-none px-4 py-3 text-sm focus:ring-2 focus:ring-fiebriAzul" />
+                </div>
+                <div className="relative">
+                  <FiPhone className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <input type="text" placeholder="Celular (8 dígitos)" value={phone} onChange={handlePhoneChange} className="w-full rounded-2xl bg-fiebriGris border-none pl-11 pr-4 py-3 text-sm focus:ring-2 focus:ring-fiebriAzul font-bold" />
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-          <div>
-            <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1 ml-1">Correo Electrónico</label>
-            <input
-              type="email" placeholder="tu@correo.com" value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-gray-300"
-            />
+          <div className="relative">
+            <FiMail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input type="email" placeholder="Correo Electrónico" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full rounded-2xl bg-fiebriGris border-none pl-11 pr-4 py-3 text-sm focus:ring-2 focus:ring-fiebriAzul" />
           </div>
 
           {mode !== 'forgot' && (
-            <div>
-              <div className="flex justify-between items-center mb-1 ml-1">
-                <label className="block text-[10px] font-bold text-gray-500 uppercase">Contraseña</label>
-                {mode === 'login' && (
-                  <button type="button" onClick={() => setMode('forgot')} className="text-[10px] text-blue hover:text-black hover:underline bg-transparent">
-                    ¿Olvidaste tu contraseña?
-                  </button>
-                )}
-              </div>
+            <div className="space-y-2">
               <div className="relative">
-                <input
-                  type={showPassword ? 'text' : 'password'} placeholder="••••••••" value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className={`w-full rounded-lg border px-3 py-2 pr-10 outline-none focus:ring-2 transition-all ${
-                    mode === 'register' && password.length > 0 
-                    ? (isPasswordValid ? 'border-green-500 focus:ring-green-100' : 'border-red-300 focus:ring-red-50') 
-                    : 'border-gray-300'
-                  }`}
-                />
-                <button type="button" onClick={() => setShowPassword((s) => !s)} className="absolute right-3 top-0 -translate-y-1/2 text-gray-400 bg-transparent flex items-center h-full">
+                <FiLock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input type={showPassword ? 'text' : 'password'} placeholder="Contraseña" value={password} onChange={(e) => setPassword(e.target.value)} className={`w-full rounded-2xl bg-fiebriGris border-none pl-11 pr-12 py-3 text-sm focus:ring-2 ${mode === 'register' && password.length > 0 ? (isPasswordValid ? 'ring-2 ring-fiebriVerde' : 'ring-2 ring-red-300') : ''}`} />
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-fiebriAzul">
                   {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
                 </button>
               </div>
-
-              {mode === 'register' && (
-                <div className="mt-3 p-2 bg-gray-50 rounded-lg border border-gray-100">
-                  <ul className="space-y-1">
-                    <li className={`flex items-center text-[10px] ${hasLength ? 'text-green-600 font-bold' : 'text-gray-400'}`}>
-                      <span className="mr-1.5">{hasLength ? '✓' : '○'}</span> 6+ caracteres
-                    </li>
-                    <li className={`flex items-center text-[10px] ${hasUpper ? 'text-green-600 font-bold' : 'text-gray-400'}`}>
-                      <span className="mr-1.5">{hasUpper ? '✓' : '○'}</span> Una MAYÚSCULA
-                    </li>
-                    <li className={`flex items-center text-[10px] ${hasNumber ? 'text-green-600 font-bold' : 'text-gray-400'}`}>
-                      <span className="mr-1.5">{hasNumber ? '✓' : '○'}</span> Un número
-                    </li>
-                  </ul>
-                </div>
-              )}
             </div>
           )}
 
-          <div className="pt-2 space-y-4">
-            <button type="submit" className="w-full rounded-lg py-2.5 font-bold text-black transition hover:scale-[1.02] shadow-md fondo-plateado">
-              {mode === 'login' && 'Entrar'}
-              {mode === 'register' && 'Crear Cuenta'}
-              {mode === 'forgot' && 'Enviar Enlace'}
+          <div className="pt-4 space-y-6">
+            <button type="submit" className="boton-fiebri-verde w-full py-4 rounded-2xl text-white font-black text-lg shadow-xl uppercase tracking-tighter italic">
+              {mode === 'login' && '¡Entrar a la Cancha!'}
+              {mode === 'register' && 'Confirmar Fichaje'}
+              {mode === 'forgot' && 'Enviar Instrucciones'}
             </button>
 
-            <div className="text-center text-xs text-gray-600">
-              {mode === 'login' && (
-                <>¿No tienes cuenta? <button type="button" onClick={() => setMode('register')} className="font-bold underline hover:text-black">Regístrate</button></>
-              )}
-              {mode === 'register' && (
-                <>¿Ya tienes cuenta? <button type="button" onClick={() => setMode('login')} className="font-bold underline hover:text-black">Inicia sesión</button></>
-              )}
-              {mode === 'forgot' && (
-                <button type="button" onClick={() => setMode('login')} className="font-bold underline hover:text-black">Volver al inicio de sesión</button>
+            <div className="text-center space-y-2">
+              {mode === 'login' ? (
+                <>
+                  <p className="text-xs text-gray-400 font-medium">¿Aún no tienes cuenta?</p>
+                  <button type="button" onClick={() => setMode('register')} className="text-fiebriAzul font-black uppercase tracking-widest text-[10px] hover:text-fiebriVerde transition-colors">Crear Cuenta Nueva</button>
+                </>
+              ) : (
+                <button type="button" onClick={() => setMode('login')} className="text-fiebriAzul font-black uppercase tracking-widest text-[10px] hover:text-fiebriVerde transition-colors">Regresar</button>
               )}
             </div>
           </div>
         </form>
-      </div>
+      </motion.div>
     </div>
   );
 }

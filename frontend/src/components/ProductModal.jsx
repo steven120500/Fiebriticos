@@ -1,15 +1,14 @@
 import { useEffect, useRef, useState, useMemo } from 'react';
 import { toast } from 'react-toastify';
-import { FaWhatsapp, FaTimes, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
+import { FaWhatsapp, FaTimes, FaChevronLeft, FaChevronRight, FaEdit, FaTrashAlt, FaFutbol, FaCheckCircle } from 'react-icons/fa';
 import { motion, AnimatePresence } from "framer-motion";
 
-// ✅ MEJORA 1: Usamos la misma lógica que en AddProduct para evitar errores de URL
 const API_BASE = import.meta.env.VITE_API_URL || "https://fiebriticos.onrender.com";
 
 const TALLAS_ADULTO = ['S', 'M', 'L', 'XL', 'XXL', '3XL', '4XL'];
 const TALLAS_NINO   = ['16', '18', '20', '22', '24', '26', '28'];
 const TALLAS_BALON  = ['3', '4', '5'];
-const ACCEPTED_TYPES = ['image/png', 'image/jpg', 'image/jpeg', 'image/heic'];
+const ACCEPTED_TYPES = ['image/png', 'image/jpg', 'image/jpeg', 'image/heic', 'image/webp'];
 
 const MODAL_IMG_MAX_W = 800;
 
@@ -22,51 +21,32 @@ function transformCloudinary(url, maxW) {
     const transforms = `f_auto,q_auto:eco,c_limit,w_${maxW},dpr_auto`;
     u.pathname = `${parts[0]}/upload/${transforms}/${parts[1]}`;
     return u.toString();
-  } catch {
-    return url;
-  }
+  } catch { return url; }
 }
 
-function isLikelyObjectId(v) {
-  return typeof v === 'string' && /^[0-9a-fA-F]{24}$/.test(v);
-}
-
-export default function ProductModal({
-  product,
-  onClose,
-  onUpdate,
-  canEdit,
-  canDelete,
-  user,
-}) {
+export default function ProductModal({ product, onClose, onUpdate, canEdit, canDelete, user }) {
   const modalRef = useRef(null);
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
   const [viewProduct, setViewProduct] = useState(product);
   const [isEditing, setIsEditing] = useState(false);
 
-  const [editedStock,  setEditedStock]  = useState(product.stock  || {});
-  const [editedName,   setEditedName]   = useState(product?.name || '');
-  const [editedPrice,  setEditedPrice]  = useState(product?.price ?? 0);
+  const [editedStock, setEditedStock] = useState(product.stock || {});
+  const [editedName, setEditedName] = useState(product?.name || '');
+  const [editedPrice, setEditedPrice] = useState(product?.price ?? 0);
   const [editedDiscountPrice, setEditedDiscountPrice] = useState(product?.discountPrice ?? '');
-  const [editedType,   setEditedType]   = useState(product?.type || 'Player');
-  const [editedIsNew,  setEditedIsNew]  = useState(Boolean(product?.isNew));
-  const [loading,      setLoading]      = useState(false);
+  const [editedType, setEditedType] = useState(product?.type || 'Player');
+  const [editedIsNew, setEditedIsNew] = useState(Boolean(product?.isNew));
+  const [loading, setLoading] = useState(false);
 
   const galleryFromProduct = useMemo(() => {
     if (Array.isArray(product?.images) && product.images.length > 0) {
-      return product.images
-        .map(i => (typeof i === 'string' ? i : i?.url))
-        .filter(Boolean);
+      return product.images.map(i => (typeof i === 'string' ? i : i?.url)).filter(Boolean);
     }
     return [product?.imageSrc, product?.imageSrc2].filter(Boolean);
   }, [product]);
 
-  const [localImages, setLocalImages] = useState(
-    galleryFromProduct.map(src => ({ src, isNew: false }))
-  );
-
+  const [localImages, setLocalImages] = useState(galleryFromProduct.map(src => ({ src, isNew: false })));
   const [idx, setIdx] = useState(0);
-  const hasMany = localImages.length > 1;
   const currentSrc = localImages[idx]?.src || '';
 
   useEffect(() => {
@@ -75,19 +55,11 @@ export default function ProductModal({
     setEditedPrice(product?.price ?? 0);
     setEditedDiscountPrice(product?.discountPrice ?? '');
     setEditedType(product?.type || 'Player');
-    setEditedStock({ ...(product?.stock  || {}) });
+    setEditedStock({ ...(product?.stock || {}) });
     setEditedIsNew(Boolean(product?.isNew));
-    setLocalImages(
-      product?.images?.length
-        ? product.images.map(img => ({ src: typeof img === 'string' ? img : img.url, isNew: false }))
-        : [
-            ...(product?.imageSrc  ? [{ src: product.imageSrc,  isNew: false }] : []),
-            ...(product?.imageSrc2 ? [{ src: product.imageSrc2, isNew: false }] : []),
-          ]
-    );
+    setLocalImages(galleryFromProduct.map(src => ({ src, isNew: false })));
     setIdx(0);
-    setShowConfirmDelete(false);
-  }, [product]);
+  }, [product, galleryFromProduct]);
 
   useEffect(() => {
     document.body.style.overflow = 'hidden';
@@ -96,411 +68,186 @@ export default function ProductModal({
 
   const handleSave = async () => {
     if (loading) return;
-
-    const id = product?._id || product?.id;
-    if (!id || !isLikelyObjectId(id)) {
-      toast.error('ID de producto inválido');
-      return;
-    }
-
     try {
       setLoading(true);
-      const displayName = user?.username || user?.email || 'FutStore';
-
-      const priceInt = Math.max(0, parseInt(editedPrice, 10) || 0);
-      let discountInt = null;
-      if (editedDiscountPrice !== '' && !isNaN(Number(editedDiscountPrice))) {
-        const val = parseInt(editedDiscountPrice, 10);
-        if (val > 0) discountInt = val;
-      }
-
-      const clean = (obj) =>
-        Object.fromEntries(
-          Object.entries(obj || {}).map(([k, v]) => [k, Math.max(0, parseInt(v, 10) || 0)])
-        );
-
+      const displayName = user?.username || 'Fiebriticos';
       const payload = {
-        name: (editedName || '').trim(),
-        price: priceInt,
-        discountPrice: discountInt,
-        type: (editedType || '').trim(),
-        stock:  clean(editedStock),
-        images: localImages.map(i => i?.src).filter(Boolean),
-        imageSrc:  localImages[0]?.src || null,
-        imageSrc2: localImages[1]?.src || null,
-        imageAlt: (editedName || '').trim(),
-        isNew: !!editedIsNew,
+        name: editedName.trim(),
+        price: parseInt(editedPrice, 10),
+        discountPrice: editedDiscountPrice !== '' ? parseInt(editedDiscountPrice, 10) : null,
+        type: editedType,
+        stock: editedStock,
+        images: localImages.map(i => i.src),
+        isNew: editedIsNew
       };
 
-      const res = await fetch(`${API_BASE}/api/products/${encodeURIComponent(id)}`, {
+      const res = await fetch(`${API_BASE}/api/products/${product._id || product.id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-user': displayName,
-        },
+        headers: { 'Content-Type': 'application/json', 'x-user': displayName },
         body: JSON.stringify(payload),
       });
 
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.error || `Error ${res.status}`);
-      }
-
+      if (!res.ok) throw new Error();
       const updated = await res.json();
       setViewProduct(updated);
       onUpdate?.(updated);
       setIsEditing(false);
-      toast.success('Producto actualizado');
-      
-    } catch (err) {
-      console.error(err);
-      toast.error(err.message || 'Error al actualizar');
-    } finally {
-      setLoading(false);
-    }
+      toast.success('¡Inventario actualizado!');
+    } catch { toast.error('Error al actualizar'); } finally { setLoading(false); }
   };
 
   const executeDelete = async () => {
     if (loading) return;
-    
-    const id = product?._id || product?.id;
-    if (!id || !isLikelyObjectId(id)) {
-      toast.error('ID inválido, no se puede eliminar');
-      setShowConfirmDelete(false); 
-      return;
-    }
-
     try {
       setLoading(true);
-      const displayName = user?.username || 'FutStore';
-      
-      const res = await fetch(`${API_BASE}/api/products/${encodeURIComponent(id)}`, {
+      const res = await fetch(`${API_BASE}/api/products/${product._id || product.id}`, {
         method: 'DELETE',
-        headers: { 'Content-Type': 'application/json', 'x-user': displayName },
+        headers: { 'x-user': user?.username || 'Fiebriticos' },
       });
-      
-      // ✅ MEJORA 2: Leemos el error real del backend si falla
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.error || `Error ${res.status} al eliminar`);
-      }
-      
-      toast.success('Producto eliminado correctamente');
-      onUpdate?.(null, id);
-      onClose?.();
-
-    } catch (err) {
-      console.error("Error eliminando:", err);
-      // ✅ MEJORA 3: Mostramos el error real en el toast
-      toast.error(err.message || 'No se pudo eliminar');
-    } finally {
-      setLoading(false);
-      setShowConfirmDelete(false); 
-    }
+      if (!res.ok) throw new Error();
+      toast.success('Producto eliminado');
+      onUpdate?.(null, product._id || product.id);
+      onClose();
+    } catch { toast.error('Error al eliminar'); } finally { setLoading(false); }
   };
 
-  const handleStockChange = (size, value) => {
-    setEditedStock(prev => ({ ...prev, [size]: parseInt(value, 10) || 0 }));
-  };
-
-  const handleImageChange = (e, index) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (!ACCEPTED_TYPES.includes(file.type)) {
-      toast.error('Formato no soportado');
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = () => {
-      setLocalImages(prev => {
-        const copy = prev.slice();
-        if (index >= copy.length) copy.push({ src: reader.result, isNew: true });
-        else copy[index] = { src: reader.result, isNew: true };
-        return copy;
-      });
-      setIdx(index);
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const handleImageRemove = (index) => {
-    setLocalImages(prev => {
-      const copy = prev.slice();
-      copy.splice(index, 1);
-      return copy;
-    });
-    setIdx(0);
-  };
-
-  const isNino  = (isEditing ? editedType : viewProduct?.type) === 'Niño';
-  const isBalon = (isEditing ? editedType : viewProduct?.type) === 'Balón';
-
-  const tallasVisibles = isBalon
-    ? TALLAS_BALON
-    : isNino
-    ? TALLAS_NINO
-    : TALLAS_ADULTO;
-
+  const tallasVisibles = (isEditing ? editedType : viewProduct?.type) === 'Balón' ? TALLAS_BALON : (isEditing ? editedType : viewProduct?.type) === 'Niño' ? TALLAS_NINO : TALLAS_ADULTO;
   const displayUrl = currentSrc ? transformCloudinary(currentSrc, MODAL_IMG_MAX_W) : '';
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.3 }}
-      className="mt-10 mb-16 fixed inset-0 z-50 bg-black/40 flex items-center justify-center py-6 backdrop-blur-sm"
-      onClick={onClose}
-    >
-      <motion.div
-        ref={modalRef}
-        onClick={(e) => e.stopPropagation()} 
-        initial={{ scale: 0.9, opacity: 0, y: 20 }}
-        animate={{ scale: 1, opacity: 1, y: 0 }}
-        exit={{ scale: 0.9, opacity: 0, y: 20 }}
-        transition={{ type: "spring", damping: 25, stiffness: 300 }}
-        className="relative pt-12 pb-24 bg-white p-6 rounded-lg shadow-md max-w-md w-full max-h-screen overflow-y-auto"
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-fiebriAzul/60 backdrop-blur-md p-4 overflow-y-auto" onClick={onClose}>
+      <motion.div 
+        initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0, y: 20 }}
+        className="relative bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl overflow-hidden border-b-8 border-fiebriVerde my-auto"
+        onClick={(e) => e.stopPropagation()}
       >
-        <button
-          onClick={onClose}
-          className="absolute fondo-plateado mr-2 top-12 right-2 text-black bg-black rounded p-1"
-          title="Cerrar"
-        >
-          <FaTimes size={30} />
-        </button>
-
-        <div className="mt-16 mb-2 text-left">
-          {isEditing && canEdit ? (
-            <>
-              <label className="text-sm text-gray-500">Tipo</label>
-              <select
-                value={editedType}
-                onChange={(e) => setEditedType(e.target.value)}
-                className="w-full px-3 py-2 border rounded mb-3"
-              >
-                {['Player','Fan','Mujer','Nacional','Abrigos','Retro','Niño','Balón'].map(t => (
-                  <option key={t} value={t}>{t}</option>
-                ))}
-              </select>
-
-              <label className="text-sm text-gray-500">Nombre</label>
-              <input
-                type="text"
-                className="w-full border px-2 py-1 mb-3"
-                value={editedName}
-                onChange={(e) => setEditedName(e.target.value)}
-              />
-
-              <label className="text-sm text-gray-500">Precio normal</label>
-              <input
-                type="number"
-                className="w-full border px-2 py-1 mb-3"
-                value={editedPrice}
-                onChange={(e) => setEditedPrice(e.target.value)}
-              />
-
-              <label className="text-sm text-gray-500">Precio descuento (opcional)</label>
-              <input
-                type="number"
-                className="w-full border px-2 py-1 mb-3"
-                value={editedDiscountPrice}
-                onChange={(e) => setEditedDiscountPrice(e.target.value)}
-                placeholder="Dejar vacío si no tiene"
-              />
-
-              <label className="flex items-center gap-2 mt-1 mb-3 select-none">
-                <input
-                  type="checkbox"
-                  checked={editedIsNew}
-                  onChange={(e) => setEditedIsNew(e.target.checked)}
-                />
-                <span className="text-sm">Mostrar etiqueta <strong>NUEVO</strong></span>
-              </label>
-            </>
-          ) : (
-            <>
-              <span className="block text-xs uppercase text-gray-500">{viewProduct?.type}</span>
-              <h2 className="text-xl font-extrabold" style={{ color: '#9E8F91' }}>
-                {viewProduct?.name}
-              </h2>
-            </>
-          )}
+        {/* Header Visual */}
+        <div className="bg-fiebriAzul p-8 text-center relative overflow-hidden">
+          <FaFutbol className="absolute -top-4 -left-4 text-white/5 text-8xl rotate-12" />
+          <button onClick={onClose} className="absolute right-6 top-6 text-white/50 hover:text-fiebriVerde transition-all hover:rotate-90">
+            <FaTimes size={24} />
+          </button>
+          
+          <span className="bg-fiebriVerde text-fiebriAzul text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest mb-3 inline-block shadow-lg">
+            {isEditing ? 'Modo Edición' : (viewProduct?.type || 'Detalle')}
+          </span>
+          <h2 className="text-3xl font-black text-white italic uppercase tracking-tighter leading-tight px-4">
+            {isEditing ? 'Ajustar Producto' : viewProduct?.name}
+          </h2>
         </div>
 
-        {!isEditing ? (
-          <div className="relative mb-4 flex items-center justify-center h-[400px] overflow-hidden">
-            <AnimatePresence mode="wait">
-              {displayUrl ? (
+        <div className="p-8">
+          {/* Vista Galería */}
+          {!isEditing ? (
+            <div className="relative group rounded-[2rem] bg-fiebriGris overflow-hidden mb-8 shadow-inner aspect-square flex items-center justify-center">
+              <AnimatePresence mode="wait">
                 <motion.img
-                  key={displayUrl}
-                  src={displayUrl}
-                  alt={viewProduct?.name}
-                  className="rounded max-h-[400px] object-contain cursor-grab active:cursor-grabbing"
-                  initial={{ opacity: 0, x: 50 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -50 }}
-                  transition={{ duration: 0.2, ease: "easeInOut" }}
-                  loading="eager"
-                  draggable="false"
+                  key={displayUrl} src={displayUrl} alt={viewProduct?.name}
+                  initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
+                  className="max-h-full max-w-full object-contain p-4"
                 />
-              ) : (
-                <div className="h-[300px] w-full grid place-items-center text-gray-400">
-                  Sin imagen
+              </AnimatePresence>
+              {localImages.length > 1 && (
+                <div className="absolute inset-0 flex items-center justify-between px-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button onClick={() => setIdx((idx - 1 + localImages.length) % localImages.length)} className="p-3 bg-white/20 backdrop-blur-md rounded-2xl text-white hover:bg-fiebriVerde hover:text-fiebriAzul transition-all shadow-xl">
+                    <FaChevronLeft />
+                  </button>
+                  <button onClick={() => setIdx((idx + 1) % localImages.length)} className="p-3 bg-white/20 backdrop-blur-md rounded-2xl text-white hover:bg-fiebriVerde hover:text-fiebriAzul transition-all shadow-xl">
+                    <FaChevronRight />
+                  </button>
                 </div>
               )}
-            </AnimatePresence>
+            </div>
+          ) : (
+            <div className="space-y-6 mb-8 bg-fiebriGris p-6 rounded-[2rem] border border-gray-100 shadow-inner">
+               <div>
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block ml-2">Nombre del Producto</label>
+                  <input type="text" value={editedName} onChange={(e) => setEditedName(e.target.value)} className="w-full bg-white rounded-2xl px-5 py-3 text-sm font-bold text-fiebriAzul border-none focus:ring-2 focus:ring-fiebriVerde shadow-sm" />
+               </div>
+               <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block ml-2">Precio Normal</label>
+                    <input type="number" value={editedPrice} onChange={(e) => setEditedPrice(e.target.value)} className="w-full bg-white rounded-2xl px-5 py-3 text-sm font-bold text-fiebriAzul border-none focus:ring-2 focus:ring-fiebriVerde shadow-sm" />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block ml-2">Descuento</label>
+                    <input type="number" value={editedDiscountPrice} onChange={(e) => setEditedDiscountPrice(e.target.value)} placeholder="Opcional" className="w-full bg-white rounded-2xl px-5 py-3 text-sm font-bold text-red-500 border-none focus:ring-2 focus:ring-red-400 shadow-sm" />
+                  </div>
+               </div>
+               <div className="flex items-center gap-3 p-2 cursor-pointer select-none" onClick={() => setEditedIsNew(!editedIsNew)}>
+                  <div className={`w-10 h-5 rounded-full transition-colors flex items-center px-1 ${editedIsNew ? 'bg-fiebriVerde' : 'bg-gray-300'}`}>
+                    <div className={`w-3 h-3 bg-white rounded-full transition-transform ${editedIsNew ? 'translate-x-5' : 'translate-x-0'}`} />
+                  </div>
+                  <span className="text-xs font-black text-fiebriAzul uppercase tracking-tight">Mostrar etiqueta NUEVO</span>
+               </div>
+            </div>
+          )}
 
-            {hasMany && (
-              <>
-                <button 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setIdx(i => (i - 1 + localImages.length) % localImages.length);
-                  }}
-                  className="absolute left-2 z-10 fondo-plateado hover:bg-black/70 text-white p-2 rounded-full transition-all backdrop-blur-sm"
-                >
-                  <FaChevronLeft size={20}/>
-                </button>
-                <button 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setIdx(i => (i + 1) % localImages.length);
-                  }}
-                  className="absolute right-2 z-10 fondo-plateado hover:bg-black/70 text-white p-2 rounded-full transition-all backdrop-blur-sm"
-                >
-                  <FaChevronRight size={20}/>
-                </button>
-              </>
-            )}
+          {/* Gestión de Stock */}
+          <div className="mb-8">
+            <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+              <FaFutbol className="text-fiebriVerde" /> Disponibilidad por Tallas
+            </h4>
+            <div className="grid grid-cols-4 gap-2">
+              {tallasVisibles.map(t => (
+                <div key={t} className={`flex flex-col items-center p-3 rounded-2xl border-2 transition-all ${isEditing ? 'bg-white border-gray-100' : 'bg-fiebriGris border-transparent'}`}>
+                  <span className="text-[10px] font-black text-gray-400 mb-1">{t}</span>
+                  {isEditing ? (
+                    <input type="number" value={editedStock[t] ?? ''} onChange={(e) => setEditedStock({...editedStock, [t]: parseInt(e.target.value, 10) || 0})} className="w-full text-center text-sm font-black text-fiebriAzul border-none focus:ring-0 p-0" />
+                  ) : (
+                    <span className={`text-sm font-black ${viewProduct?.stock?.[t] > 0 ? 'text-fiebriAzul' : 'text-gray-300'}`}>{viewProduct?.stock?.[t] || 0}</span>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
-        ) : (
-          <div className="flex gap-4 justify-center flex-wrap mb-4">
-            {localImages.map((img, i) => (
-              <div key={i} className="relative">
-                <img src={img.src} alt="" className="h-48 object-contain"/>
-                <button onClick={() => handleImageRemove(i)}
-                  className="absolute top-0 right-0 bg-black text-white rounded-full p-1">
-                  <FaTimes />
-                </button>
-                <input type="file" accept="image/*" onChange={(e) => handleImageChange(e, i)} />
-              </div>
-            ))}
-            {localImages.length < 2 && (
-              <input type="file" accept="image/*" onChange={(e) => handleImageChange(e, localImages.length)} />
-            )}
-          </div>
-        )}
 
-        {!isEditing && (
-          <div className="mt-2 text-right">
-            {viewProduct?.discountPrice ? (
+          {/* Botones de Acción */}
+          <div className="space-y-3">
+            {!isEditing ? (
               <>
-                <p className="text-sm text-gray-500 line-through">
-                  ₡{Number(viewProduct?.price).toLocaleString('de-DE')}
-                </p>
-                <p className="text-lg font-bold text-red-600">
-                  ₡{Number(viewProduct?.discountPrice).toLocaleString('de-DE')}
-                </p>
+                <a 
+                  href={`https://wa.me/50688028216?text=${encodeURIComponent(`⚽ ¡HOLA FIEBRITICOS! Me interesa esta joya:\n\n👕 *${viewProduct?.name}*\n🏷️ Versión: ${viewProduct?.type}\n💰 Precio: ₡${(viewProduct?.discountPrice || viewProduct?.price).toLocaleString()}\n\n📸 Imagen: ${viewProduct?.imageSrc}`)}`}
+                  target="_blank" rel="noopener noreferrer"
+                  className="boton-fiebri-verde w-full py-5 rounded-2xl text-white font-black text-lg flex items-center justify-center gap-3 shadow-xl"
+                >
+                  <FaWhatsapp size={24} /> PEDIR POR WHATSAPP
+                </a>
+                <div className="grid grid-cols-2 gap-3">
+                  {canEdit && <button onClick={() => setIsEditing(true)} className="py-4 bg-fiebriAzul text-white font-black rounded-2xl text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-fiebriAzul/90 transition-all"><FaEdit /> Editar</button>}
+                  {canDelete && <button onClick={() => setShowConfirmDelete(true)} className="py-4 bg-red-50 text-red-500 font-black rounded-2xl text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-red-500 hover:text-white transition-all"><FaTrashAlt /> Eliminar</button>}
+                </div>
               </>
             ) : (
-              <p className="text-lg font-bold">
-                ₡{Number(viewProduct?.price).toLocaleString('de-DE')}
-              </p>
+              <div className="grid grid-cols-2 gap-3">
+                <button onClick={handleSave} disabled={loading} className="py-5 bg-fiebriVerde text-fiebriAzul font-black rounded-2xl text-sm uppercase tracking-widest shadow-lg flex items-center justify-center gap-2">
+                  <FaCheckCircle /> {loading ? 'Guardando...' : 'Confirmar'}
+                </button>
+                <button onClick={() => setIsEditing(false)} className="py-5 bg-gray-100 text-gray-500 font-black rounded-2xl text-sm uppercase tracking-widest">Cancelar</button>
+              </div>
             )}
           </div>
-        )}
-
-        <div className="mt-4">
-          <p className="font-semibold mb-2">Stock por talla:</p>
-          {tallasVisibles.map((talla) => (
-            <div key={talla} className="flex justify-between items-center border rounded px-2 py-1 mb-1 text-[#d4af37]">
-              <span>{talla}</span>
-              {isEditing ? (
-                <input
-                  type="number"
-                  min="0"
-                  className="w-16 border text-center"
-                  value={editedStock[talla] ?? ''}
-                  onChange={(e) => handleStockChange(talla, e.target.value)}
-                />
-              ) : (
-                <span>{viewProduct?.stock?.[talla] || 0}</span>
-              )}
-            </div>
-          ))}
         </div>
 
-        <div className="mt-6 grid grid-cols-2 gap-2">
-          {canEdit && isEditing ? (
-            <button className="col-span-2 bg-green-600 text-white py-2 rounded" onClick={handleSave}>
-              {loading ? 'Guardando...' : 'Guardar'}
-            </button>
-          ) : canEdit && (
-            <button className="bg-blue-600 text-white py-2 rounded" onClick={() => setIsEditing(true)}>
-              Editar
-            </button>
-          )}
-          {canDelete && (
-            <button 
-                className="bg-red-600 text-white py-2 rounded hover:bg-red-700 transition" 
-                onClick={() => setShowConfirmDelete(true)}
-            >
-              Eliminar
-            </button>
-          )}
-        </div>
-
-        <a
-          href={`https://wa.me/50672327096?text=${encodeURIComponent(
-            `👋 ¡Hola! Me interesa el producto:
-
-🛒 *${product?.name}* (${product?.type})
-
-💰 *Precio:* ₡${product?.discountPrice > 0 ? product.discountPrice : product.price}
-
-📸 *Imagen:* ${product?.imageSrc || ""}`
-          )}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mt-4 block bg-green-600 text-white py-2 rounded text-center font-bold hover:bg-green-700 transition"
-        >
-          <FaWhatsapp className="inline mr-2" />
-          Enviar mensaje por WhatsApp
-        </a>
-
-        {showConfirmDelete && (
-          <div className="absolute bottom-3 left-0 right-0 bg-black/60 flex items-center justify-center z-50 rounded-lg backdrop-blur-sm">
-            <motion.div 
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              className="bg-white p-6 rounded-xl shadow-2xl text-center max-w-xs mx-4 border-2 border-red-100"
-            >
-              <FaTimes className="mx-auto text-red-500 mb-3" size={40} />
-              <h3 className="text-xl font-bold mb-2 text-gray-800">¿Estás seguro?</h3>
-              <p className="text-gray-600 mb-6 text-sm">
-                ¿Quieres eliminar este producto permanentemente? Esta acción no se puede deshacer.
-              </p>
-              <div className="flex gap-3 justify-center">
-                <button
-                  onClick={() => setShowConfirmDelete(false)}
-                  className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md font-semibold hover:bg-gray-300 transition"
-                  disabled={loading}
-                >
-                  Cancelar
+        {/* Modal de Confirmación de Borrado */}
+        <AnimatePresence>
+          {showConfirmDelete && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 z-[110] bg-fiebriAzul/95 backdrop-blur-xl flex flex-col items-center justify-center p-10 text-center">
+              <div className="w-24 h-24 bg-white/10 rounded-full flex items-center justify-center mb-6 border-2 border-white/20">
+                <FaTrashAlt className="text-red-400 text-4xl" />
+              </div>
+              <h3 className="text-3xl font-black text-white uppercase italic tracking-tighter mb-4">¿Sacar del Catálogo?</h3>
+              <p className="text-white/60 font-medium mb-10 text-sm leading-relaxed">Esta acción es irreversible. El producto y sus imágenes serán eliminados permanentemente del servidor.</p>
+              <div className="flex flex-col w-full gap-3">
+                <button onClick={executeDelete} disabled={loading} className="py-4 bg-red-500 text-white font-black rounded-2xl uppercase tracking-widest shadow-2xl hover:bg-red-600 transition-all">
+                  {loading ? 'Procesando...' : 'Sí, Eliminar de la Cancha'}
                 </button>
-                <button
-                  onClick={executeDelete}
-                  className="px-4 py-2 bg-red-600 text-white rounded-md font-semibold hover:bg-red-700 transition flex items-center"
-                  disabled={loading}
-                >
-                  {loading ? 'Eliminando...' : 'Sí, Eliminar'}
-                </button>
+                <button onClick={() => setShowConfirmDelete(false)} className="py-4 text-white/50 font-black uppercase tracking-widest text-xs hover:text-white">Cancelar y Mantener</button>
               </div>
             </motion.div>
-          </div>
-        )}
-
+          )}
+        </AnimatePresence>
       </motion.div>
-    </motion.div>
+    </div>
   );
 }

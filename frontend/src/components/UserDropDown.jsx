@@ -1,17 +1,17 @@
-// src/components/UserDropDown.jsx
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
-import { FaUser } from 'react-icons/fa';
-import { FiLogOut, FiUserPlus, FiUsers, FiClock } from 'react-icons/fi';
+import { FaUser, FaFutbol } from 'react-icons/fa';
+import { FiLogOut, FiUserPlus, FiUsers, FiClock, FiSettings } from 'react-icons/fi';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function UserDropdown({
-  isSuperUser,        // boolean
-  canSeeHistory,      // boolean -> super o rol 'history'
-  onLogout,           // () => void
-  onAddUser,          // () => void
-  onViewUsers,        // () => void
-  onViewHistory,      // () => void
+  isSuperUser,
+  canSeeHistory,
+  onLogout,
+  onAddUser,
+  onViewUsers,
+  onViewHistory,
 }) {
-  // util para cerrar el menú en móviles al hacer click
+  // Cerramos el menú simulando el escape
   const closeMenu = () =>
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
 
@@ -20,54 +20,81 @@ export default function UserDropdown({
       <DropdownMenu.Root>
         <DropdownMenu.Trigger asChild>
           <button
-            className="rounded-full mt-4 p-3 shadow-lg transition bg-green-500 text-white bg-black hover:bg-gray-800"
+            className="group relative flex items-center justify-center rounded-2xl p-3 shadow-xl transition-all bg-fiebriAzul text-white hover:scale-105 border-b-4 border-fiebriVerde active:translate-y-1 active:border-b-0"
             aria-label="User menu"
           >
-            <FaUser size={20} />
+            <FaUser size={20} className="group-hover:text-fiebriVerde transition-colors" />
           </button>
         </DropdownMenu.Trigger>
 
-        <DropdownMenu.Content
-          sideOffset={8}
-          className="bg-white border rounded shadow-lg p-2 text-sm space-y-1 z-50"
-        >
-          {/* Opciones solo para súper */}
-          {isSuperUser && (
-            <>
-              <DropdownMenu.Item
-                className="cursor-pointer flex items-center gap-2 hover:bg-gray-100 p-2 rounded"
-                onSelect={(e) => { e.preventDefault(); closeMenu(); onAddUser(); }}
-              >
-                <FiUserPlus /> Agregar usuario
-              </DropdownMenu.Item>
-
-              <DropdownMenu.Item
-                className="cursor-pointer flex items-center gap-2 hover:bg-gray-100 p-2 rounded"
-                onSelect={(e) => { e.preventDefault(); closeMenu(); onViewUsers(); }}
-              >
-                <FiUsers /> Ver usuarios
-              </DropdownMenu.Item>
-            </>
-          )}
-
-          {/* Historial: súper o rol 'history' */}
-          {canSeeHistory && (
-            <DropdownMenu.Item
-              className="cursor-pointer flex items-center gap-2 hover:bg-gray-100 p-2 rounded"
-              onSelect={(e) => { e.preventDefault(); document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' })); onViewHistory(); }}
-            >
-              <FiClock /> Historial
-            </DropdownMenu.Item>
-          )}
-
-          {/* Cerrar sesión */}
-          <DropdownMenu.Item
-            className="cursor-pointer flex items-center gap-2 hover:bg-gray-100 p-2 rounded"
-            onSelect={(e) => { e.preventDefault(); closeMenu(); onLogout(); }}
+        <DropdownMenu.Portal>
+          <DropdownMenu.Content
+            sideOffset={12}
+            align="end"
+            className="bg-white border border-gray-100 rounded-[2rem] shadow-2xl p-3 w-64 z-[100] border-b-8 border-fiebriVerde animate-in fade-in zoom-in-95 duration-200"
           >
-            <FiLogOut /> Cerrar sesión
-          </DropdownMenu.Item>
-        </DropdownMenu.Content>
+            {/* Header del Dropdown */}
+            <div className="px-4 py-3 mb-2 border-b border-fiebriGris">
+              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                <FaFutbol className="text-fiebriVerde" /> Panel de Control
+              </p>
+            </div>
+
+            {/* Opciones solo para Súper Usuario */}
+            {isSuperUser && (
+              <>
+                <DropdownMenu.Item
+                  className="outline-none cursor-pointer flex items-center gap-3 p-3 rounded-xl text-fiebriAzul font-bold text-xs uppercase tracking-tight hover:bg-fiebriGris hover:text-fiebriVerde transition-all"
+                  onSelect={(e) => { e.preventDefault(); closeMenu(); onAddUser(); }}
+                >
+                  <div className="bg-fiebriAzul/5 p-2 rounded-lg">
+                    <FiUserPlus size={16} />
+                  </div>
+                  Agregar Usuario
+                </DropdownMenu.Item>
+
+                <DropdownMenu.Item
+                  className="outline-none cursor-pointer flex items-center gap-3 p-3 rounded-xl text-fiebriAzul font-bold text-xs uppercase tracking-tight hover:bg-fiebriGris hover:text-fiebriVerde transition-all"
+                  onSelect={(e) => { e.preventDefault(); closeMenu(); onViewUsers(); }}
+                >
+                  <div className="bg-fiebriAzul/5 p-2 rounded-lg">
+                    <FiUsers size={16} />
+                  </div>
+                  Lista de Usuarios
+                </DropdownMenu.Item>
+              </>
+            )}
+
+            {/* Opción de Historial */}
+            {canSeeHistory && (
+              <DropdownMenu.Item
+                className="outline-none cursor-pointer flex items-center gap-3 p-3 rounded-xl text-fiebriAzul font-bold text-xs uppercase tracking-tight hover:bg-fiebriGris hover:text-fiebriVerde transition-all"
+                onSelect={(e) => { e.preventDefault(); closeMenu(); onViewHistory(); }}
+              >
+                <div className="bg-fiebriAzul/5 p-2 rounded-lg">
+                  <FiClock size={16} />
+                </div>
+                Bitácora VAR
+              </DropdownMenu.Item>
+            )}
+
+            {/* Separador sutil */}
+            <div className="h-px bg-fiebriGris my-2 mx-2" />
+
+            {/* Cerrar sesión - Estilo Destacado */}
+            <DropdownMenu.Item
+              className="outline-none cursor-pointer flex items-center gap-3 p-3 rounded-xl text-red-500 font-black text-xs uppercase tracking-widest hover:bg-red-50 transition-all"
+              onSelect={(e) => { e.preventDefault(); closeMenu(); onLogout(); }}
+            >
+              <div className="bg-red-50 p-2 rounded-lg">
+                <FiLogOut size={16} />
+              </div>
+              Finalizar Sesión
+            </DropdownMenu.Item>
+            
+            <DropdownMenu.Arrow className="fill-white" />
+          </DropdownMenu.Content>
+        </DropdownMenu.Portal>
       </DropdownMenu.Root>
     </div>
   );
