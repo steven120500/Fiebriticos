@@ -169,3 +169,21 @@
      0%, 100% { transform: scale(1); }
      50% { transform: scale(1.05); }
    }
+
+   /* Este es el contenedor que 'recorta' */
+.contenedor-tabla-medidas {
+  width: 300px; /* El ancho que quieras para la tabla */
+  height: 350px; /* ¡LA ALTURA FINAL Y CORTA QUE DESEAS! */
+  overflow: hidden; /* ¡ESTA ES LA CLAVE! Esconde todo lo que se salga de la altura que definiste */
+  border-radius: 12px; /* Opcional, para bordes redondeados */
+  /* center horizontally if needed */
+  margin: 0 auto;
+}
+
+/* Esta es la imagen dentro del contenedor */
+.contenedor-tabla-medidas img {
+  object-fit: contain; /* o 'cover', según prefieras. 'contain' mantiene la proporción */
+  object-position: top center; /* Asegura que la parte superior (la tabla) sea lo que se mantenga visible */
+  width: 100%;
+  height: auto; /* deja que la altura se ajuste proporcionalmente, pero será cortada por el contenedor */
+}

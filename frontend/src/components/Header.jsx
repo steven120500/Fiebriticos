@@ -34,15 +34,9 @@ export default function Header({
   };
 
   return (
-    <header className="px-4 sm:px-10 py-3 fixed w-full top-6 left-0 z-50 transition-all duration-300 bg-fiebriAzul border-b-2 border-fiebriVerde shadow-2xl">
+    <header className="px-4 sm:px-10 py-3 fixed w-full top-6 left-0 z-50 transition-all duration-300 bg-fiebriVerde border-fiebriVerde shadow-2xl">
       
-      {/* 🧪 BARRA DE INFO SUPERIOR (Opcional, estilo marcador) */}
-      <div className="absolute top-0 left-0 w-full flex justify-center z-[60] pointer-events-none">
-        <div className="bg-fiebriVerde text-fiebriAzul px-4 py-0.5 text-[8px] font-black rounded-b-lg shadow-md uppercase tracking-[0.2em]">
-          Tu estilo juega en primera
-        </div>
-      </div>
-
+      
       <div className="flex items-center justify-between max-w-7xl mx-auto">
         
         {/* 🔹 IZQUIERDA: Logo y Accesos Rápidos */}
@@ -51,7 +45,7 @@ export default function Header({
             onClick={() => { navigate('/'); if (onLogoClick) onLogoClick(); }} 
             className="focus:outline-none hover:scale-105 transition-transform"
           >
-            <img src={logo} alt="Fiebriticos Logo" className="h-12 sm:h-20 object-contain" />
+            <img src={logo} alt="Fiebriticos Logo" className="h-20  sm:h-28 object-contain" />
           </button>
 
           <div className="flex gap-2">
@@ -60,7 +54,7 @@ export default function Header({
               className="text-white text-[10px] sm:text-xs bg-white/10 backdrop-blur-md border border-white/20 font-black px-4 py-2.5 rounded-xl flex items-center gap-2 hover:bg-fiebriVerde hover:text-fiebriAzul transition-all uppercase tracking-tighter"
             >
               <LiaRulerSolid size={18} /> 
-              <span className="hidden lg:inline">Guía de Tallas</span>
+              <span className="hidden lg:inline">Medidas</span>
             </button>
 
             <button 
@@ -68,7 +62,7 @@ export default function Header({
               className="text-white text-[10px] sm:text-xs bg-white/10 backdrop-blur-md border border-white/20 font-black px-4 py-2.5 rounded-xl flex items-center gap-2 hover:bg-fiebriVerde hover:text-fiebriAzul transition-all uppercase tracking-tighter"
             >
               <FiPhoneCall size={16} /> 
-              <span className="hidden lg:inline">Contacto</span>
+              <span className="hidden lg:inline">Contactános</span>
             </button>
           </div>
         </div>
@@ -113,7 +107,7 @@ export default function Header({
             >
               <button 
                 onClick={() => setSidebarOpen(false)} 
-                className="absolute text-fiebriAzul top-6 right-6 hover:rotate-90 transition-transform"
+                className="absolute text-fiebriAzul top-8 right-6 hover:rotate-90 transition-transform"
               >
                 <FaTimes size={28} />
               </button>
@@ -162,9 +156,9 @@ export default function Header({
                   <div className="w-24 h-24 bg-fiebriGris rounded-3xl flex items-center justify-center mx-auto mb-8">
                     <FaUser size={40} className="text-fiebriAzul/20" />
                   </div>
-                  <h3 className="text-fiebriAzul font-black text-3xl mb-10 tracking-tighter uppercase italic">¡HOLA FIEBRE!</h3>
+                  <h3 className="text-fiebriAzul font-black text-3xl mb-10 tracking-tighter uppercase italic"></h3>
                   <button onClick={() => { onLoginClick(); setSidebarOpen(false); }} className="boton-fiebri-verde w-full py-5 rounded-2xl text-white font-black uppercase tracking-widest shadow-2xl">
-                    ENTRAR AL PANEL
+                    Iniciar Sesión
                   </button>
                 </div>
               )}

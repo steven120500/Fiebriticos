@@ -1,12 +1,12 @@
 import React, { useEffect } from "react";
 import { createPortal } from "react-dom";
-import { FaTimes, FaFutbol, FaChevronRight } from "react-icons/fa";
+import { FaTimes, FaFutbol } from "react-icons/fa";
 import { LiaRulerSolid } from "react-icons/lia";
 import { motion, AnimatePresence } from "framer-motion"; 
 
 // 🔽 Importamos las imágenes
-//import fanImg from "../assets/Fan.png";
-//import playerImg from "../assets/Player.png";
+import fanImg from "../assets/Fan.png";
+import playerImg from "../assets/Player.png";
 
 export default function Medidas({ open, onClose }) {
   
@@ -27,14 +27,14 @@ export default function Medidas({ open, onClose }) {
       key: "Player", 
       label: "Versión Player", 
       badge: "Ajuste Pro",
-      //img: playerImg, 
+      img: playerImg, 
       desc: "Corte atlético pegado al cuerpo. Ideal si prefieres lucir como el jugador en la cancha." 
     },
     { 
       key: "Fan", 
       label: "Versión Fan", 
       badge: "Ajuste Cómodo",
-      //img: fanImg, 
+      img: fanImg, 
       desc: "Corte recto y holgado. La opción clásica para el uso diario y máximo confort." 
     },
   ];
@@ -106,13 +106,14 @@ export default function Medidas({ open, onClose }) {
                   {desc}
                 </p>
 
-                {/* Contenedor de Imagen (Marco Pro) */}
-                <div className="bg-fiebriGris rounded-[2rem] p-4 border-2 border-gray-50 shadow-inner group hover:border-fiebriVerde/30 transition-all">
-                  <div className="bg-white rounded-[1.5rem] p-4 shadow-sm">
+                {/* ✂️ CONTENEDOR DE IMAGEN (Con Recorte Automático) */}
+                <div className="bg-fiebriGris rounded-[2rem] p-3 border-2 border-gray-50 shadow-inner group hover:border-fiebriVerde/30 transition-all">
+                  {/* Aquí está el truco: Altura fija (h-[320px] y overflow-hidden para cortar el fondo largo) */}
+                  <div className="bg-white rounded-[1.5rem] w-full h-[400px] sm:h-[700px] overflow-hidden shadow-sm flex items-start justify-center">
                     <img
                       src={img}
                       alt={`Medidas ${label}`}
-                      className="w-full h-auto object-contain transition-transform group-hover:scale-[1.02]"
+                      className="w-full h-auto object-top transition-transform duration-500 group-hover:scale-[1.03]"
                     />
                   </div>
                 </div>
