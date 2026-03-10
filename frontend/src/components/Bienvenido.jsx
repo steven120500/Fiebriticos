@@ -39,7 +39,7 @@ export default function Bienvenido() {
       <div className="absolute inset-0 z-0">
         <img
           src={isMobile ? "/FondoM.png" : "/FondoD.png"}
-          alt="Fondo FutStore"
+          alt="Fondo Fiebriticos"
           className="w-full h-full object-fill brightness-[0.5]" 
         />
       </div>
@@ -56,7 +56,7 @@ export default function Bienvenido() {
               BIENVENIDO
             </h1>
             <h2 className="-mt-10 mb-6 md:mt-0 md:mb-0 text-4xl md:text-6xl font-light text-gray-200 mt-2">
-              a <span className="font-serif italic text-white">FutStore</span>
+              a <span className="font-serif italic text-white">Fiebriticos</span>
             </h2>
             <p className="-mt-3 mb-3 md:mt-0 md:mb-0 text-gray-300 text-lg md:text-xl max-w-md mx-auto md:mx-0 font-medium">
               La élite del fútbol, en tu piel.
