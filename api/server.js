@@ -32,6 +32,7 @@ app.use(morgan('dev'));
 // CORS: Lista blanca (Actualizada para desarrollo)
 const allowedOrigins = [
   'http://localhost:5173',
+  'https://fiebriticos-catalogo.onrender.com'
   // Cuando subas el frontend de Fiebriticos a Render o compres el dominio, los agregas aquí:
   // 'https://fiebriticos-frontend.onrender.com',
   // 'https://www.fiebriticos.com'
