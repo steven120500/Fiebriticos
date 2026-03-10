@@ -72,10 +72,18 @@ export default function App() {
     } catch { return null; }
   });
 
-  const isSuperUser = user?.isSuperUser || false;
-  const canSeeHistory = user?.isSuperUser || user?.roles?.includes("history");
-  const canAdd = user?.isSuperUser || user?.roles?.includes("add");
-  const canEdit = user?.isSuperUser || user?.roles?.includes("edit");
+  // 🔹 VALIDACIÓN DE SUPER USUARIO CORREGIDA
+  // Esto atrapa todos los casos posibles que mande tu base de datos
+  const isSuperUser = user?.isSuperUser === true || user?.role === "admin" || user?.role === "superadmin" || user?.role === "super_user";
+  
+  const canSeeHistory = isSuperUser || (user?.roles && user.roles.includes("history"));
+  const canAdd = isSuperUser || (user?.roles && user.roles.includes("add"));
+  const canEdit = isSuperUser || (user?.roles && user.roles.includes("edit"));
+
+  // 🧪 TEST DEL VAR (Revisá la consola del navegador con F12)
+  console.log("👤 Usuario actual:", user);
+  console.log("👑 ¿Es super usuario?:", isSuperUser);
+  console.log("➕ ¿Puede agregar chemas?:", canAdd);
 
   const handleLogout = () => {
     setUser(null);
@@ -179,7 +187,7 @@ export default function App() {
               {/* BOTÓN FLOTANTE ADMIN */}
               {canAdd && (
                 <button 
-                  className="fixed bottom-10 right-10 boton-fiebri-verde w-16 h-16 rounded-2xl shadow-2xl z-50 flex items-center justify-center text-white"
+                  className="fixed bottom-10 right-10 boton-fiebri-verde w-16 h-16 rounded-2xl shadow-2xl z-50 flex items-center justify-center text-white hover:scale-110 active:scale-95 transition-all"
                   onClick={() => setShowAddModal(true)}
                 >
                   <FaPlus size={24} />
@@ -195,7 +203,7 @@ export default function App() {
                       key={getPid(product)}
                       product={product}
                       user={user}
-                      onClick={() => navigate(`/product/${getPid(product)}`)}
+                      onClick={() => window.location.href = `/product/${getPid(product)}`}
                     />
                   ))}
                 </div>

@@ -5,8 +5,8 @@ import { LiaRulerSolid } from "react-icons/lia";
 import { motion, AnimatePresence } from "framer-motion"; 
 
 // 🔽 Importamos las imágenes
-import fanImg from "../assets/Fan.png";
-import playerImg from "../assets/Player.png";
+//import fanImg from "../assets/Fan.png";
+//import playerImg from "../assets/Player.png";
 
 export default function Medidas({ open, onClose }) {
   
@@ -27,14 +27,14 @@ export default function Medidas({ open, onClose }) {
       key: "Player", 
       label: "Versión Player", 
       badge: "Ajuste Pro",
-      img: playerImg, 
+      //img: playerImg, 
       desc: "Corte atlético pegado al cuerpo. Ideal si prefieres lucir como el jugador en la cancha." 
     },
     { 
       key: "Fan", 
       label: "Versión Fan", 
       badge: "Ajuste Cómodo",
-      img: fanImg, 
+      //img: fanImg, 
       desc: "Corte recto y holgado. La opción clásica para el uso diario y máximo confort." 
     },
   ];
@@ -125,7 +125,7 @@ export default function Medidas({ open, onClose }) {
                 onClick={onClose}
                 className="boton-fiebri-verde w-full py-5 rounded-2xl text-white font-black text-xl shadow-xl flex items-center justify-center gap-3 uppercase tracking-tighter italic"
               >
-                ¡ENTENDIDO, A JUGAR! <FaFutbol />
+                ¡ENTENDIDO! <FaFutbol />
               </button>
               
               <p className="text-center text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-6">
