@@ -4,7 +4,7 @@ import { toast } from 'react-toastify';
 import { 
   FaWhatsapp, FaTimes, FaChevronLeft, FaChevronRight, FaEdit, 
   FaTrash, FaShoppingCart, FaArrowLeft, FaExclamationTriangle, 
-  FaFutbol, FaTag, FaCheckCircle 
+  FaFutbol, FaTag, FaCheckCircle, FaPlus, FaImage
 } from 'react-icons/fa';
 import { motion, AnimatePresence } from "framer-motion";
 import { useCart } from '../context/CartContext';
@@ -18,9 +18,7 @@ import RegisterUserModal from '../components/RegisterUserModal';
 import Medidas from '../components/Medidas';
 
 // 🚀 JUGADA INTELIGENTE: Detecta si es local o producción
-const API_BASE = window.location.hostname === "localhost" 
-  ? "http://localhost:5001" 
-  : "https://fiebriticos.onrender.com"; 
+const API_BASE = import.meta.env.VITE_API_URL || "https://fiebriticos.onrender.com"; 
 
 const TALLAS_ADULTO = ['S', 'M', 'L', 'XL', 'XXL', '3XL', '4XL'];
 const TALLAS_NINO   = ['16', '18', '20', '22', '24', '26', '28'];
@@ -102,6 +100,7 @@ export default function ProductDetail({
   const handleSave = async () => {
     if (loadingAction) return;
     setLoadingAction(true);
+    
     try {
       const payload = {
         name: editedName.trim(),
@@ -109,21 +108,35 @@ export default function ProductDetail({
         discountPrice: editedDiscountPrice ? parseInt(editedDiscountPrice, 10) : null,
         type: editedType,
         stock: editedStock,
-        images: localImages.map(i => i.src), 
+        // Filtramos para no enviar el placeholder a la BD
+        images: localImages.map(i => i.src).filter(src => src !== PLACEHOLDER_IMG), 
         isNew: editedIsNew,
       };
+
       const res = await fetch(`${API_BASE}/api/products/${id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', 'x-user': user?.username || 'Admin' },
+        headers: { 
+          'Content-Type': 'application/json', 
+          'x-user': user?.username || 'Admin' 
+        },
         body: JSON.stringify(payload),
       });
-      if (!res.ok) throw new Error();
-      const updated = await res.json();
-      setProduct(updated);
+
+      const data = await res.json();
+      
+      if (!res.ok) {
+        // 🚀 EL LOG MAESTRO: Aquí verás por qué falló el local
+        console.log("❌ ERROR DEL BACKEND:", data); 
+        throw new Error(data.message || "Error al actualizar");
+      }
+
+      setProduct(data);
       setIsEditing(false);
       toast.success("¡Información actualizada!");
-    } catch {
-      toast.error("No se pudo actualizar");
+      if(onUpdate) onUpdate(data);
+    } catch (err) {
+      console.error("❌ ERROR EN LA PETICIÓN:", err);
+      toast.error(err.message || "No se pudo actualizar");
     } finally {
       setLoadingAction(false);
     }
@@ -147,20 +160,36 @@ export default function ProductDetail({
     }
   };
 
-  const handleImageChange = (e, index) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      setLocalImages(prev => {
-        const copy = [...prev];
-        if (index >= copy.length) copy.push({ src: reader.result, isNew: true });
-        else copy[index] = { src: reader.result, isNew: true };
-        return copy;
-      });
-      setIdx(index);
-    };
-    reader.readAsDataURL(file);
+  const handleImageChange = (e) => {
+    const files = Array.from(e.target.files);
+    if (!files.length) return;
+
+    const actualImgs = localImages.filter(img => img.src !== PLACEHOLDER_IMG);
+    if (actualImgs.length + files.length > 2) {
+      return toast.error("Solo se permiten máximo 2 imágenes por producto");
+    }
+
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        setLocalImages(prev => {
+          const current = prev.filter(img => img.src !== PLACEHOLDER_IMG);
+          const newState = [...current, { src: reader.result, isNew: true }];
+          setIdx(newState.length - 1); 
+          return newState;
+        });
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const removeImage = (index) => {
+    setLocalImages(prev => {
+        const filtered = prev.filter((_, i) => i !== index);
+        const newState = filtered.length === 0 ? [{ src: PLACEHOLDER_IMG, isNew: false }] : filtered;
+        if (idx >= filtered.length) setIdx(Math.max(0, filtered.length - 1));
+        return newState;
+    });
   };
 
   const handleBuyWhatsApp = () => {
@@ -217,10 +246,10 @@ export default function ProductDetail({
       <main className="pt-32 pb-24 px-6 max-w-7xl mx-auto">
         
         {/* 🔙 BOTÓN VOLVER TIPO FIEBRITICO */}
-        <div className="mb-8 flex items-center justify-between">
+        <div className="mt-24 mb-6 flex items-center justify-between">
             <button 
                 onClick={() => navigate(-1)} 
-                className="flex items-center gap-3 top-16 bg-fiebriAzul text-white px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg hover:bg-fiebriVerde hover:text-fiebriAzul transition-all group active:scale-95"
+                className="flex items-center gap-3 bg-fiebriAzul text-white px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg hover:bg-fiebriVerde hover:text-fiebriAzul transition-all group active:scale-95"
             >
                 <FaArrowLeft className="group-hover:-translate-x-1 transition-transform" /> 
                 Volver
@@ -242,22 +271,38 @@ export default function ProductDetail({
               
               {!isEditing && localImages.length > 1 && (
                 <>
-                  <button onClick={() => setIdx((i) => (i - 1 + localImages.length) % localImages.length)} className="absolute left-6 bg-fiebriAzul/10 backdrop-blur-md p-4 rounded-2xl shadow hover:bg-fiebriVerde hover:text-fiebriAzul transition opacity-0 group-hover:opacity-100 text-white"><FaChevronLeft /></button>
-                  <button onClick={() => setIdx((i) => (i + 1) % localImages.length)} className="absolute right-6 bg-fiebriAzul/10 backdrop-blur-md p-4 rounded-2xl shadow hover:bg-fiebriVerde hover:text-fiebriAzul transition opacity-0 group-hover:opacity-100 text-white"><FaChevronRight /></button>
+                  <button onClick={() => setIdx((i) => (i - 1 + localImages.length) % localImages.length)} className="absolute left-6 bg-blue-900 backdrop-blur-md p-4 rounded-2xl shadow hover:bg-fiebriVerde hover:text-fiebriAzul transition opacity-0 group-hover:opacity-100 text-white"><FaChevronLeft /></button>
+                  <button onClick={() => setIdx((i) => (i + 1) % localImages.length)} className="absolute right-6 bg-blue-900 backdrop-blur-md p-4 rounded-2xl shadow hover:bg-fiebriVerde hover:text-fiebriAzul transition opacity-0 group-hover:opacity-100 text-white"><FaChevronRight /></button>
                 </>
               )}
             </div>
 
             <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar">
               {localImages.map((img, i) => (
-                <div key={i} className="relative flex-shrink-0">
+                <div key={i} className="relative flex-shrink-0 group">
                   <img 
                     src={img.src} 
                     onClick={() => setIdx(i)}
                     className={`w-24 h-24 object-cover rounded-2xl cursor-pointer border-4 transition-all ${idx === i ? 'border-fiebriVerde shadow-lg scale-105' : 'border-white hover:border-fiebriAzul/20'}`} 
                   />
+                  {isEditing && img.src !== PLACEHOLDER_IMG && (
+                    <button 
+                        onClick={() => removeImage(i)}
+                        className="absolute -top-2 -right-2 bg-red-500 text-white p-1 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                        <FaTimes size={12} />
+                    </button>
+                  )}
                 </div>
               ))}
+              
+              {isEditing && localImages.length < 2 && (
+                <label className="w-24 h-24 flex-shrink-0 flex flex-col items-center justify-center border-4 border-dashed border-gray-200 rounded-2xl cursor-pointer hover:border-fiebriVerde transition-colors">
+                    <input type="file" multiple className="hidden" onChange={handleImageChange} />
+                    <FaPlus className="text-gray-300 mb-1" />
+                    <span className="text-[8px] font-black text-gray-400 uppercase">Añadir</span>
+                </label>
+              )}
             </div>
           </div>
 
@@ -286,11 +331,11 @@ export default function ProductDetail({
                       <div className="grid grid-cols-2 gap-4">
                           <div className="relative">
                             <span className="absolute left-4 top-1/2 -translate-y-1/2 font-black text-fiebriAzul">₡</span>
-                            <input type="number" value={editedPrice} onChange={e => setEditedPrice(e.target.value)} className="w-full bg-fiebriGris border-none rounded-2xl pl-10 pr-4 py-3 font-bold text-fiebriAzul" />
+                            <input type="number" min="0" value={editedPrice} onChange={e => setEditedPrice(Math.max(0, e.target.value))} className="w-full bg-fiebriGris border-none rounded-2xl pl-10 pr-4 py-3 font-bold text-fiebriAzul" />
                           </div>
                           <div className="relative">
                             <span className="absolute left-4 top-1/2 -translate-y-1/2 font-black text-red-500">₡</span>
-                            <input type="number" value={editedDiscountPrice} onChange={e => setEditedDiscountPrice(e.target.value)} className="w-full bg-red-50 border-none rounded-2xl pl-10 pr-4 py-3 font-bold text-red-500" placeholder="Oferta" />
+                            <input type="number" min="0" value={editedDiscountPrice} onChange={e => setEditedDiscountPrice(Math.max(0, e.target.value))} className="w-full bg-red-50 border-none rounded-2xl pl-10 pr-4 py-3 font-bold text-red-500" placeholder="Oferta" />
                           </div>
                       </div>
 
@@ -300,9 +345,18 @@ export default function ProductDetail({
                           {tallasVisibles.map(t => (
                             <div key={t} className="flex flex-col items-center">
                               <span className="text-[9px] font-black text-fiebriAzul mb-1">{t}</span>
-                              <input type="number" className="w-full bg-white border-none rounded-xl text-center p-2 text-xs font-black shadow-sm" 
-                                    value={editedStock[t] ?? 0} 
-                                    onChange={(e) => setEditedStock(prev => ({ ...prev, [t]: e.target.value }))} />
+                              <input 
+                                    type="number" 
+                                    min="0"
+                                    placeholder="0"
+                                    className="w-full bg-white border-none rounded-xl text-center p-2 text-xs font-black shadow-sm focus:ring-2 focus:ring-fiebriVerde" 
+                                    value={editedStock[t] === 0 ? '' : (editedStock[t] || '')} 
+                                    onChange={(e) => {
+                                        const val = e.target.value;
+                                        const numVal = val === '' ? 0 : parseInt(val, 10);
+                                        setEditedStock(prev => ({ ...prev, [t]: Math.max(0, numVal) }));
+                                    }} 
+                                />
                             </div>
                           ))}
                         </div>
@@ -387,7 +441,6 @@ export default function ProductDetail({
                 </div>
 
                 <div className="flex flex-col gap-4">
-                  
                   <button onClick={handleBuyWhatsApp} className="boton-fiebri-verde w-full py-5 rounded-2xl text-white font-black text-xl flex items-center justify-center gap-4 shadow-xl active:scale-95">
                     <FaWhatsapp size={28} /> COMPRAR POR WHATSAPP
                   </button>
