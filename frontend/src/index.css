@@ -132,44 +132,109 @@
       🏷️ ETIQUETAS Y DETALLES
       =========================================================== */
    
-   /* Sticker "NUEVO" */
-   .sticker-new {
-     position: absolute;
-     top: -10px; left: -10px;
-     width: 65px; height: 65px;
-     z-index: 10;
-     border-radius: 50%;
-     background: var(--color-fiebriAzul);
-     border: 2px solid var(--color-fiebriVerde);
-     display: flex;
-     align-items: center;
-     justify-content: center;
-     box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-   }
-   
-   .sticker-new span {
-     font-size: 10px;
-     font-weight: 900;
-     color: white;
-     text-transform: uppercase;
-   }
-   
-   /* Etiqueta Oferta */
-   .etiqueta-oferta-fiebri {
-     background: linear-gradient(90deg, #dc2626, #ef4444);
-     color: white;
-     font-weight: 800;
-     padding: 0.2rem 0.6rem;
-     border-radius: 4px;
-     font-size: 0.75rem;
-     animation: pulsoSuave 2s infinite;
-   }
-   
-   @keyframes pulsoSuave {
-     0%, 100% { transform: scale(1); }
-     50% { transform: scale(1.05); }
-   }
+  /* 🏷️ STICKER "NUEVO" ESTILO FIEBRITICOS (RENOVADO) */
+  .sticker-new {
+    position: absolute;
+    top: 12px; 
+    left: -5px;
+    z-index: 10;
+    background: linear-gradient(135deg, var(--color-fiebriVerde) 0%, #16a34a 100%);
+    color: var(--color-fiebriAzul);
+    padding: 6px 15px;
+    font-weight: 950;
+    font-size: 11px;
+    text-transform: uppercase;
+    font-style: italic;
+    letter-spacing: 1px;
+    
+    /* Corte tipo bandera/trapecio */
+    clip-path: polygon(0 0, 100% 0, 85% 100%, 0% 100%);
+    
+    box-shadow: 4px 4px 15px rgba(0,0,0,0.3);
+    border-left: 4px solid var(--color-fiebriAzul);
+    
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    /* Un pequeño giro para darle dinamismo */
+    transform: rotate(-2deg);
+    transition: all 0.3s ease;
+  }
 
+  .sticker-new::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+    animation: shine-sticker 3s infinite;
+  }
+
+  @keyframes shine-sticker {
+    0% { transform: translateX(-100%); }
+    20%, 100% { transform: translateX(100%); }
+  }
+
+  .sticker-new span {
+    color: var(--color-fiebriAzul);
+    position: relative;
+    z-index: 1;
+    text-shadow: 0.5px 0.5px 0px rgba(255,255,255,0.2);
+  }
+   
+ /* 🚩 ETIQUETA OFERTA ESTILO FIEBRITICOS */
+ .etiqueta-oferta-fiebri {
+  position: relative;
+  background: #dc2626; /* Rojo base fuerte */
+  color: white;
+  font-weight: 950;
+  padding: 4px 12px;
+  border-radius: 2px;
+  font-size: 10px;
+  text-transform: uppercase;
+  font-style: italic;
+  letter-spacing: 1.5px;
+  display: inline-flex;
+  align-items: center;
+  overflow: hidden;
+  
+  /* Diseño con bordes cortados tipo ticket de estadio */
+  clip-path: polygon(10% 0%, 100% 0%, 90% 100%, 0% 100%);
+  
+  box-shadow: 3px 3px 10px rgba(220, 38, 38, 0.4);
+  border-right: 3px solid #7f1d1d; /* Detalle oscuro al final */
+  animation: pulsoAlerta 2.5s infinite ease-in-out;
+}
+
+/* ✨ Efecto de destello que recorre la oferta */
+.etiqueta-oferta-fiebri::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg, 
+    transparent, 
+    rgba(255, 255, 255, 0.6), 
+    transparent
+  );
+  transition: none;
+  animation: shimmer-oferta 4s infinite;
+}
+
+@keyframes shimmer-oferta {
+  0% { left: -100%; }
+  15% { left: 100%; }
+  100% { left: 100%; }
+}
+
+@keyframes pulsoAlerta {
+  0%, 100% { transform: scale(1); filter: brightness(1); }
+  50% { transform: scale(1.03); filter: brightness(1.2); }
+}
    /* Este es el contenedor que 'recorta' */
 .contenedor-tabla-medidas {
   width: 300px; /* El ancho que quieras para la tabla */
