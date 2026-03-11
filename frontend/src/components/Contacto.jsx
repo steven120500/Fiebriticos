@@ -20,7 +20,7 @@ export default function Contacto() {
         
         {/* FACEBOOK */}
         <motion.a
-          href="https://www.facebook.com/profile.php?id=61559013514708" // Actualizar si cambia
+          href="https://www.facebook.com/profile.php?id=61565653482608&locale=es_LA" // Actualizar si cambia
           target="_blank"
           rel="noopener noreferrer"
           whileHover={{ scale: 1.2, rotate: -5 }}
@@ -44,7 +44,7 @@ export default function Contacto() {
 
         {/* WHATSAPP - El contacto principal */}
         <motion.a
-          href="https://wa.me/50688028216" // ✅ Número oficial actualizado
+          href="https://wa.me/50683068960" // ✅ Número oficial actualizado
           target="_blank"
           rel="noopener noreferrer"
           whileHover={{ scale: 1.2, y: -5 }}

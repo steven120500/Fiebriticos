@@ -17,9 +17,9 @@ export default function Footer() {
 
         {/* Redes Sociales Rápidas */}
         <div className="flex gap-6 mb-10">
-          <a href="#" className="hover:text-fiebriVerde transition-colors"><FaFacebookF size={20} /></a>
-          <a href="#" className="hover:text-fiebriVerde transition-colors"><FaInstagram size={20} /></a>
-          <a href="https://wa.me/50688028216" className="hover:text-fiebriVerde transition-colors"><FaWhatsapp size={20} /></a>
+          <a href="https://www.facebook.com/profile.php?id=61565653482608&locale=es_LA" className="hover:text-fiebriVerde transition-colors"><FaFacebookF size={20} /></a>
+          <a href="https://www.instagram.com/fiebriticos_cr/" className="hover:text-fiebriVerde transition-colors"><FaInstagram size={20} /></a>
+          <a href="https://wa.me/50683068960" className="hover:text-fiebriVerde transition-colors"><FaWhatsapp size={20} /></a>
         </div>
 
         {/* Divisor */}
