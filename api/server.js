@@ -41,8 +41,8 @@ app.use(cors({
     'https://fiebriticos.onrender.com'
   ],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  // 👇 2. AGREGAMOS 'x-super' PARA QUE EL GUARDA DEJE PASAR AL ADMIN
-  allowedHeaders: ['Content-Type', 'Authorization', 'x-user', 'x-super'],
+  // 👇 2. AQUÍ ESTÁ EL ARREGLO: Agregamos 'x-roles' a la lista VIP
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-user', 'x-super', 'x-roles'],
   credentials: true,
 }));
 

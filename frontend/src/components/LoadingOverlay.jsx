@@ -20,7 +20,7 @@ export default function LoadingOverlay() {
             Saltando a la cancha
           </h3>
           <p className="text-fiebriVerde font-black text-[10px] uppercase tracking-[0.3em] animate-pulse">
-            Preparando alineaciones...
+            Cargando...
           </p>
         </div>
 
