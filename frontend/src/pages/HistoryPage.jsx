@@ -87,7 +87,7 @@ export default function HistoryPage({ user }) {
         <div className="flex justify-start mb-8">
             <button 
                 onClick={() => navigate(-1)} 
-                className="flex items-center gap-2 px-6 py-2.5 bg-white text-fiebriAzul border border-gray-200 rounded-2xl hover:bg-fiebriAzul  transition-all font-black text-[10px] uppercase tracking-widest shadow-sm"
+                className="flex items-center gap-2 px-6 py-2.5 bg-white text-fiebriAzul border border-gray-200 rounded-2xl hover:bg-fiebriAzul hover:text-white transition-all font-black text-[10px] uppercase tracking-widest shadow-sm"
             >
                 <FaArrowLeft /> Regresar
             </button>
@@ -179,7 +179,12 @@ export default function HistoryPage({ user }) {
                             </span>
                         </div>
                     </div>
-                    <span className="text-[9px] font-black text-gray-300 bg-fiebriGris px-3 py-1 rounded-full uppercase tracking-tighter">REF: {log.productId?.substring(0,8) || log._id?.substring(18)}</span>
+                    {/* 👇 SE MUESTRA EL ID COMO REFERENCIA 👇 */}
+                    <div className="flex flex-col items-end">
+                      <span className="text-[9px] font-black text-gray-300 bg-fiebriGris px-3 py-1 rounded-full uppercase tracking-tighter">
+                        REF: {log.productId?.substring(0,8) || log._id?.substring(18)}
+                      </span>
+                    </div>
                   </div>
 
                   <h2 className="text-fiebriAzul font-black text-2xl sm:text-3xl italic uppercase tracking-tighter leading-tight group-hover:text-fiebriVerde transition-colors">
@@ -191,17 +196,13 @@ export default function HistoryPage({ user }) {
                     {log.date ? new Date(log.date).toLocaleString() : new Date(log.createdAt).toLocaleString()}
                   </div>
                   
+                  {/* 👇 EL TEXTO DEL HISTORIAL SALE DIRECTO, SIN BOTONES OCULTOS 👇 */}
                   {log.details && (
-                    <details className="mt-2 group/details">
-                      <summary className="text-[10px] font-black text-fiebriAzul/40 cursor-pointer uppercase tracking-widest list-none hover:text-fiebriAzul transition-colors">
-                        Ver detalles técnicos [+]
-                      </summary>
-                      <div className="mt-4 bg-fiebriGris p-5 rounded-2xl border border-gray-100 overflow-hidden">
-                        <pre className="text-[11px] text-fiebriAzul/70 font-mono overflow-x-auto whitespace-pre-wrap break-words leading-relaxed">
-                          {typeof log.details === "string" ? log.details : JSON.stringify(log.details, null, 2)}
-                        </pre>
-                      </div>
-                    </details>
+                    <div className="mt-2 bg-fiebriGris p-5 rounded-2xl border border-gray-100 overflow-hidden">
+                      <p className="text-[12px] sm:text-sm text-fiebriAzul/80 font-bold leading-relaxed">
+                        {typeof log.details === "string" ? log.details : JSON.stringify(log.details, null, 2)}
+                      </p>
+                    </div>
                   )}
                 </div>
               </div>
