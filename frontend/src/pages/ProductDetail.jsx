@@ -220,7 +220,7 @@ export default function ProductDetail({
         <div className="mb-8 flex items-center justify-between">
             <button 
                 onClick={() => navigate(-1)} 
-                className="flex items-center gap-3 top-10 bg-fiebriAzul text-white px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg hover:bg-fiebriVerde hover:text-fiebriAzul transition-all group active:scale-95"
+                className="flex items-center gap-3 top-16 bg-fiebriAzul text-white px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg hover:bg-fiebriVerde hover:text-fiebriAzul transition-all group active:scale-95"
             >
                 <FaArrowLeft className="group-hover:-translate-x-1 transition-transform" /> 
                 Volver
