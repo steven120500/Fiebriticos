@@ -48,7 +48,7 @@ router.get('/health', async (_req, res) => {
   }
 });
 
-/** 1. Listado paginado (Sin cambios, esto es solo lectura) */
+/** 1. Listado paginado */
 router.get('/', async (req, res) => {
   try {
     const page = Math.max(parseInt(req.query.page || '1', 10), 1);
@@ -147,12 +147,14 @@ router.post('/', upload.any(), async (req, res) => {
       isNew,
     });
 
-    // 👈 2. REGISTRAMOS LA CREACIÓN EN EL HISTORIAL
+    // 👈 2. REGISTRAMOS LA CREACIÓN (Ya adaptado a tu History.js)
     const adminUser = req.headers['x-user'] || 'Administrador';
     await History.create({
-      admin: adminUser,
+      user: adminUser,
       action: 'Crear',
-      details: `Se agregó al catálogo: ${product.name}`
+      item: product.name,
+      productId: product._id,
+      details: { mensaje: 'Se agregó una nueva chema al catálogo' }
     }).catch(err => console.error("Error guardando historial:", err));
 
     res.status(201).json(product);
@@ -216,12 +218,14 @@ router.put('/:id', async (req, res) => {
 
     const updated = await Product.findByIdAndUpdate(req.params.id, { $set: update }, { new: true, runValidators: true });
 
-    // 👈 3. REGISTRAMOS LA EDICIÓN EN EL HISTORIAL
+    // 👈 3. REGISTRAMOS LA EDICIÓN (Ya adaptado a tu History.js)
     const adminUser = req.headers['x-user'] || 'Administrador';
     await History.create({
-      admin: adminUser,
+      user: adminUser,
       action: 'Editar',
-      details: `Se modificó la info/inventario de: ${updated.name}`
+      item: updated.name,
+      productId: updated._id,
+      details: { mensaje: 'Se modificó la información o el inventario' }
     }).catch(err => console.error("Error guardando historial:", err));
 
     res.json(updated);
@@ -239,15 +243,17 @@ router.delete('/:id', async (req, res) => {
     for (const img of product.images || []) {
       if (img.public_id) { try { await cloudinary.uploader.destroy(img.public_id); } catch {} }
     }
-    const productName = product.name; // Guardamos el nombre antes de borrarlo
+    const productName = product.name; 
     await product.deleteOne();
 
-    // 👈 4. REGISTRAMOS LA ELIMINACIÓN EN EL HISTORIAL
+    // 👈 4. REGISTRAMOS LA ELIMINACIÓN (Ya adaptado a tu History.js)
     const adminUser = req.headers['x-user'] || 'Administrador';
     await History.create({
-      admin: adminUser,
+      user: adminUser,
       action: 'Eliminar',
-      details: `Se sacó del catálogo: ${productName}`
+      item: productName, 
+      productId: req.params.id,
+      details: { mensaje: 'Se sacó esta joya del catálogo' }
     }).catch(err => console.error("Error guardando historial:", err));
 
     res.json({ message: 'Producto eliminado exitosamente' });
