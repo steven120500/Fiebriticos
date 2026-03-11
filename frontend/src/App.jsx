@@ -35,7 +35,7 @@ import Checkout from "./pages/Checkout.jsx";
 import OrdersPage from "./pages/OrdersPage.jsx"; 
 import HistoryPage from "./pages/HistoryPage.jsx";
 
-const API_BASE = import.meta.env.VITE_API_URL || "https://fiebriticos.onrender.com"; 
+const API_BASE = "https://fiebriticos.onrender.com"; 
 
 function buildPages(page, pages) {
   const out = new Set([1, pages, page, page - 1, page - 2, page + 1, page + 2]);

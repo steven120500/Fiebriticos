@@ -40,8 +40,17 @@ export default function ProductCard({ product, onClick, canEdit }) {
 
   const hasDiscount = Number(product.discountPrice) > 0;
   const isNew = Boolean(product.isNew);
-  const totalStock = Object.values(product.stock || {}).reduce((acc, qty) => acc + (Number(qty) || 0), 0);
+  
+  // 📈 Lógica de Stock
+  const stockEntries = Object.entries(product.stock || {});
+  const totalStock = stockEntries.reduce((acc, [_, qty]) => acc + (Number(qty) || 0), 0);
   const isOutOfStock = totalStock <= 0;
+
+  // Tallas agotadas (Reporte para Admin)
+  const tallasAgotadas = stockEntries
+    .filter(([_, qty]) => Number(qty) <= 0)
+    .map(([talla]) => talla.toUpperCase())
+    .join(" - ");
 
   return (
     <motion.div
@@ -56,16 +65,16 @@ export default function ProductCard({ product, onClick, canEdit }) {
       =========================== */}
       <div className="relative w-full aspect-[4/5] bg-fiebriGris overflow-hidden">
         
-        {/* Agotado Overlay */}
+        {/* 🚩 AGOTADO OVERLAY (Transparente con desenfoque para ver la chema atrás) */}
         {isOutOfStock && (
-          <div className="absolute inset-0 z-30 flex items-center justify-center bg-fiebriAzul/40 backdrop-blur-sm">
-            <span className="bg-white text-fiebriAzul font-black uppercase tracking-widest text-xs px-6 py-3 rounded-xl shadow-2xl rotate-[-10deg] border-2 border-fiebriAzul">
+          <div className="absolute inset-0 z-30 flex items-center justify-center bg-fiebriAzul/30 backdrop-blur-[3px] group-hover:backdrop-blur-none transition-all duration-500">
+            <span className="bg-white text-fiebriAzul font-black uppercase tracking-widest text-[10px] px-5 py-2.5 rounded-xl shadow-2xl rotate-[-10deg] border-2 border-fiebriAzul">
               Agotado
             </span>
           </div>
         )}
 
-        {/* Sticker NUEVO - Usa la clase de index.css */}
+        {/* Sticker NUEVO */}
         {!isOutOfStock && isNew && (
           <div className="sticker-new z-20">
             <span>Nuevo</span>
@@ -91,7 +100,7 @@ export default function ProductCard({ product, onClick, canEdit }) {
                 alt={product.name}
                 className={`w-full h-full object-cover transition-all duration-700 ease-in-out group-hover:scale-110 ${
                   imgHover && !isOutOfStock ? "group-hover:opacity-0" : "" 
-                } ${isOutOfStock ? "opacity-40 grayscale" : ""}`}
+                } ${isOutOfStock ? "brightness-75" : ""}`}
                 loading="lazy"
               />
               {imgHover && !isOutOfStock && (
@@ -117,7 +126,7 @@ export default function ProductCard({ product, onClick, canEdit }) {
       =========================== */}
       <div className="flex flex-col flex-grow">
         
-        {/* Badge de Categoría (Azul Fiebriticos) */}
+        {/* Badge de Categoría */}
         {product.type && (
           <div className="w-full bg-fiebriAzul py-1.5 text-center">
             <span className="text-[9px] font-black text-white uppercase tracking-[0.2em]">
@@ -127,12 +136,10 @@ export default function ProductCard({ product, onClick, canEdit }) {
         )}
 
         <div className="p-5 flex flex-col justify-between flex-grow">
-          {/* Nombre con tipografía deportiva */}
           <h3 className="text-sm font-black text-fiebriAzul uppercase italic tracking-tighter leading-tight line-clamp-2 min-h-[2.8em] group-hover:text-fiebriVerde transition-colors">
             {product.name}
           </h3>
 
-          {/* Sección de Precios */}
           <div className="flex items-center justify-between mt-4">
             <div className="flex flex-col">
               {hasDiscount ? (
@@ -151,24 +158,35 @@ export default function ProductCard({ product, onClick, canEdit }) {
               )}
             </div>
             
-            {/* Indicador visual de stock rápido */}
             <div className="h-8 w-8 rounded-full bg-fiebriGris flex items-center justify-center group-hover:bg-fiebriVerde transition-colors">
               <FaFutbol className="text-gray-300 group-hover:text-fiebriAzul text-sm transition-colors" />
             </div>
           </div>
         </div>
 
-        {/* Info Admin - Estilo reporte */}
+        {/* ===========================
+            🛡️ INFO ADMIN (Reporte de Tallas)
+        =========================== */}
         {canEdit && (
           <div className="bg-fiebriGris/50 px-5 py-3 border-t border-gray-100 text-[9px] font-black uppercase tracking-widest">
              {isOutOfStock ? (
-               <p className="text-red-500 flex items-center gap-2">
-                 <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" /> Sin existencias
+               <p className="text-red-600 flex items-center gap-2">
+                 <div className="w-1.5 h-1.5 bg-red-600 rounded-full animate-pulse" /> 
+                 PRODUCTO AGOTADO TOTAL
                </p>
              ) : (
-               <p className="text-fiebriAzul flex items-center gap-2">
-                 <div className="w-1.5 h-1.5 bg-fiebriVerde rounded-full" /> Gestión Activa
-               </p>
+               <div className="flex flex-col gap-1">
+                 <p className="text-fiebriAzul flex items-center gap-2">
+                   <div className="w-1.5 h-1.5 bg-fiebriVerde rounded-full" /> 
+                   STOCK TOTAL: {totalStock}
+                 </p>
+                 
+                 {tallasAgotadas && (
+                   <p className="text-red-500/80 italic">
+                     FALTAN: {tallasAgotadas}
+                   </p>
+                 )}
+               </div>
              )}
           </div>
         )}

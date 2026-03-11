@@ -1,7 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { FaWhatsapp, FaTimes, FaChevronLeft, FaChevronRight, FaEdit, FaTrash, FaShoppingCart, FaArrowLeft, FaExclamationTriangle, FaFutbol, FaTag } from 'react-icons/fa';
+import { 
+  FaWhatsapp, FaTimes, FaChevronLeft, FaChevronRight, FaEdit, 
+  FaTrash, FaShoppingCart, FaArrowLeft, FaExclamationTriangle, 
+  FaFutbol, FaTag, FaCheckCircle 
+} from 'react-icons/fa';
 import { motion, AnimatePresence } from "framer-motion";
 import { useCart } from '../context/CartContext';
 
@@ -17,7 +21,6 @@ const API_BASE = import.meta.env.VITE_API_URL || "https://fiebriticos.onrender.c
 const TALLAS_ADULTO = ['S', 'M', 'L', 'XL', 'XXL', '3XL', '4XL'];
 const TALLAS_NINO   = ['16', '18', '20', '22', '24', '26', '28'];
 const TALLAS_BALON  = ['3', '4', '5'];
-const ACCEPTED_TYPES = ['image/png', 'image/jpg', 'image/jpeg', 'image/heic', 'image/webp'];
 const PLACEHOLDER_IMG = "https://via.placeholder.com/600x600?text=No+Image";
 
 export default function ProductDetail({ 
@@ -67,6 +70,7 @@ export default function ProductDetail({
         syncEditState(data);
       } catch (err) {
         toast.error("Error cargando el producto");
+        setProduct(null);
       } finally {
         setLoadingFetch(false);
       }
@@ -75,6 +79,7 @@ export default function ProductDetail({
   }, [id]);
 
   const syncEditState = (data) => {
+    if(!data) return;
     setEditedName(data.name || '');
     setEditedPrice(data.price ?? 0);
     setEditedDiscountPrice(data.discountPrice ?? '');
@@ -84,11 +89,7 @@ export default function ProductDetail({
     
     let imgs = [];
     if (Array.isArray(data.images) && data.images.length > 0) {
-      imgs = data.images.map(img => (typeof img === 'object' ? img.url : img)).filter(url => url && url.startsWith('http'));
-    }
-    if (imgs.length === 0 && data.imageSrc && data.imageSrc.startsWith('http')) {
-      imgs.push(data.imageSrc);
-      if (data.imageSrc2 && data.imageSrc2.startsWith('http')) imgs.push(data.imageSrc2);
+      imgs = data.images.map(img => (typeof img === 'object' ? img.url : img)).filter(url => url);
     }
     if (imgs.length === 0) imgs.push(PLACEHOLDER_IMG);
     setLocalImages(imgs.map(src => ({ src, isNew: false })));
@@ -162,7 +163,8 @@ export default function ProductDetail({
     if (!selectedSize) return toast.warning("Selecciona tu talla antes de saltar a la cancha.");
     const precioFinal = product.discountPrice || product.price;
     const mensaje = `⚽ ¡HOLA FIEBRITICOS! Me interesa esta joya:\n\n👕 *${product.name}*\n🏷️ Versión: ${product.type}\n📏 Talla: ${selectedSize}\n💰 Precio: ₡${precioFinal.toLocaleString()}\n\n¿Tienen disponibilidad inmediata?`;
-    window.open(`https://wa.me/50688028216?text=${encodeURIComponent(mensaje)}`, '_blank');
+    // 📞 Número actualizado 83068960
+    window.open(`https://wa.me/50683068960?text=${encodeURIComponent(mensaje)}`, '_blank');
   };
 
   const handleAddToCart = () => {
@@ -171,6 +173,7 @@ export default function ProductDetail({
     setShowDecisionModal(true);
   };
 
+  // 🛡️ PROTECCIÓN ANTI-CRASH 1: Cargando
   if (loadingFetch) return (
     <div className="h-screen bg-fiebriGris flex flex-col items-center justify-center">
       <FaFutbol className="text-fiebriAzul text-5xl animate-spin mb-4" />
@@ -178,6 +181,17 @@ export default function ProductDetail({
     </div>
   );
 
+  // 🛡️ PROTECCIÓN ANTI-CRASH 2: Producto no encontrado
+  if (!product) return (
+    <div className="h-screen bg-fiebriGris flex flex-col items-center justify-center px-6 text-center">
+      <FaExclamationTriangle className="text-red-500 text-6xl mb-4" />
+      <h2 className="text-2xl font-black text-fiebriAzul uppercase italic">¡FUERA DE JUEGO!</h2>
+      <p className="text-gray-500 font-bold mt-2">No pudimos encontrar esta camiseta en nuestro inventario.</p>
+      <button onClick={() => navigate('/')} className="mt-8 px-10 py-4 bg-fiebriAzul text-white font-black rounded-2xl uppercase italic">Volver al Inicio</button>
+    </div>
+  );
+
+  // Lógica segura después de cargar
   const currentSrc = localImages[idx]?.src || PLACEHOLDER_IMG;
   const currentType = isEditing ? editedType : product.type;
   const tallasVisibles = currentType === 'Balón' ? TALLAS_BALON : (currentType === 'Niño' ? TALLAS_NINO : TALLAS_ADULTO);
@@ -207,9 +221,6 @@ export default function ProductDetail({
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
           
-          {/* ===========================
-              📸 GALERÍA DE IMÁGENES 
-          =========================== */}
           <div className="space-y-6">
             <div className="relative aspect-square bg-white rounded-[2.5rem] overflow-hidden border border-gray-100 flex items-center justify-center shadow-2xl group border-b-8 border-fiebriVerde">
               <AnimatePresence mode="wait">
@@ -229,8 +240,7 @@ export default function ProductDetail({
               )}
             </div>
 
-            {/* Miniaturas */}
-            <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
+            <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar">
               {localImages.map((img, i) => (
                 <div key={i} className="relative flex-shrink-0">
                   <img 
@@ -238,21 +248,11 @@ export default function ProductDetail({
                     onClick={() => setIdx(i)}
                     className={`w-24 h-24 object-cover rounded-2xl cursor-pointer border-4 transition-all ${idx === i ? 'border-fiebriVerde shadow-lg scale-105' : 'border-white hover:border-fiebriAzul/20'}`} 
                   />
-                  {isEditing && <button onClick={() => handleImageRemove(i)} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1.5 shadow-lg"><FaTimes size={10} /></button>}
                 </div>
               ))}
-              {isEditing && localImages.length < 5 && (
-                <label className="w-24 h-24 bg-white border-2 border-dashed border-gray-200 rounded-2xl flex items-center justify-center cursor-pointer hover:border-fiebriVerde text-gray-300 transition-all">
-                  <input type="file" accept="image/*" className="hidden" onChange={(e) => handleImageChange(e, localImages.length)} />
-                  <span className="text-xl">+</span>
-                </label>
-              )}
             </div>
           </div>
 
-          {/* ===========================
-              📝 INFORMACIÓN DEL PRODUCTO 
-          =========================== */}
           <div className="flex flex-col">
             {isEditing ? (
               <div className="bg-white p-8 rounded-[2.5rem] shadow-xl border-b-8 border-fiebriAzul space-y-6">
@@ -331,22 +331,19 @@ export default function ProductDetail({
                   </div>
                 </div>
 
-                {/* Zona de Selección */}
                 <div className="mb-10 p-6 bg-fiebriGris rounded-[2rem] border-2 border-transparent hover:border-fiebriVerde/20 transition-all">
                   
-                  {/* Alerta Talla Player */}
                   {product.type === "Player" && (
                     <div className="mb-6 flex items-start gap-4 bg-white p-4 rounded-2xl border-l-4 border-fiebriAzul shadow-sm">
                       <FaExclamationTriangle className="text-fiebriAzul mt-1 flex-shrink-0" />
                       <p className="text-[11px] font-bold text-fiebriAzul leading-relaxed uppercase">
-                        <span className="text-fiebriVerde">IMPORTANTE:</span> Esta versión es de corte ajustado. Te recomendamos elegir una talla más grande de la que usas normalmente.
+                        <span className="text-fiebriVerde">IMPORTANTE:</span> Esta versión es de corte ajustado. Te recomendamos elegir una talla más grande.
                       </p>
                     </div>
                   )}
 
                   <div className="flex justify-between items-center mb-4 px-2">
                     <p className="font-black text-[10px] uppercase tracking-[0.3em] text-gray-400">Tallas Disponibles</p>
-                    <button onClick={() => setShowMedidas(true)} className="text-[10px] font-black text-fiebriAzul underline uppercase tracking-widest hover:text-fiebriVerde">Ver Medidas</button>
                   </div>
 
                   <div className="grid grid-cols-4 sm:grid-cols-5 gap-3">
@@ -375,24 +372,22 @@ export default function ProductDetail({
                     {selectedSize && stockRestante > 0 && stockRestante <= 2 && (
                       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-6 flex items-center justify-center gap-2 bg-red-50 p-3 rounded-xl border border-red-100">
                         <FaFutbol className="text-red-500 animate-bounce text-xs" />
-                        <p className="text-[10px] font-black text-red-600 uppercase tracking-widest">¡Últimas unidades! No te quedes sin la tuya.</p>
+                        <p className="text-[10px] font-black text-red-600 uppercase tracking-widest">¡Últimas unidades disponibles!</p>
                       </motion.div>
                     )}
                   </AnimatePresence>
                 </div>
 
-                {/* Acciones de Compra */}
                 <div className="flex flex-col gap-4">
                   <button onClick={handleAddToCart} className="w-full bg-fiebriAzul text-white py-5 rounded-2xl font-black text-xl hover:bg-fiebriAzul/90 transition-all shadow-xl flex items-center justify-center gap-4 active:scale-95 group">
                     <FaShoppingCart className="group-hover:rotate-12 transition-transform" /> 
                     AGREGAR AL CARRITO
                   </button>
                   <button onClick={handleBuyWhatsApp} className="boton-fiebri-verde w-full py-5 rounded-2xl text-white font-black text-xl flex items-center justify-center gap-4 shadow-xl active:scale-95">
-                    <FaWhatsapp size={28} /> WHATSAPP DIRECTO
+                    <FaWhatsapp size={28} /> COMPRAR POR WHATSAPP
                   </button>
                 </div>
 
-                {/* Zona Admin */}
                 {(isSuperUser || canDelete) && (
                   <div className="mt-16 pt-8 border-t-2 border-fiebriGris">
                     <div className="flex items-center gap-2 justify-center mb-6">
@@ -411,7 +406,6 @@ export default function ProductDetail({
           </div>
         </div>
 
-        {/* MODAL DECISIÓN (DESPUÉS DE AGREGAR AL CARRITO) */}
         <AnimatePresence>
           {showDecisionModal && (
             <div className="fixed inset-0 z-[200] bg-fiebriAzul/60 backdrop-blur-md flex items-center justify-center p-6">
@@ -420,7 +414,7 @@ export default function ProductDetail({
                   <FaCheckCircle className="text-fiebriAzul text-4xl" />
                 </div>
                 <h3 className="text-2xl font-black italic uppercase tracking-tighter text-fiebriAzul mb-2">¡DENTRO DEL ÁREA!</h3>
-                <p className="text-gray-400 text-sm mb-10 font-medium px-4">Tu chema ya está en el carrito. ¿Cómo quieres seguir la jugada?</p>
+                <p className="text-gray-400 text-sm mb-10 font-medium px-4">Tu chema ya está en el carrito.</p>
                 <div className="space-y-3">
                   <button onClick={() => navigate('/checkout')} className="boton-fiebri-verde w-full py-5 rounded-2xl text-white font-black text-lg shadow-xl">FINALIZAR COMPRA</button>
                   <button onClick={() => { setShowDecisionModal(false); navigate('/'); }} className="w-full bg-fiebriGris text-fiebriAzul py-5 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-gray-200">SEGUIR VIENDO</button>
@@ -431,14 +425,13 @@ export default function ProductDetail({
         </AnimatePresence>
       </main>
 
-      {/* MODAL ELIMINAR */}
       <AnimatePresence>
         {showConfirmDelete && (
           <div className="fixed inset-0 z-[200] bg-red-900/40 backdrop-blur-md flex items-center justify-center p-6">
             <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-white p-10 rounded-[3rem] shadow-2xl max-w-sm w-full text-center border-b-8 border-red-500">
               <div className="w-20 h-20 bg-red-100 rounded-3xl flex items-center justify-center mx-auto mb-6 text-red-500"><FaTrash size={32} /></div>
               <h3 className="text-2xl font-black italic uppercase tracking-tighter text-fiebriAzul mb-2">¿SACAR DEL EQUIPO?</h3>
-              <p className="text-gray-400 text-sm mb-10 font-medium">Esta acción es irreversible y el producto se eliminará de la base de datos.</p>
+              <p className="text-gray-400 text-sm mb-10 font-medium">Esta acción es irreversible.</p>
               <div className="grid grid-cols-2 gap-4">
                 <button onClick={() => setShowConfirmDelete(false)} className="py-4 bg-fiebriGris text-gray-500 rounded-2xl font-black text-[10px] uppercase">Cancelar</button>
                 <button onClick={executeDelete} className="py-4 bg-red-500 text-white rounded-2xl font-black text-[10px] uppercase shadow-lg shadow-red-200">{loadingAction ? '...' : 'Eliminar'}</button>
@@ -449,6 +442,9 @@ export default function ProductDetail({
       </AnimatePresence>
 
       <Footer />
+      <AnimatePresence>
+        {showMedidas && <Medidas open={showMedidas} onClose={() => setShowMedidas(false)} />}
+      </AnimatePresence>
     </div>
   );
 }
