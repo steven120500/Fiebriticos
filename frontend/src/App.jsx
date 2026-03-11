@@ -36,7 +36,7 @@ import HistoryPage from "./pages/HistoryPage.jsx";
 
 // 🚀 JUGADA INTELIGENTE: Detecta si es local o producción
 const API_BASE = window.location.hostname === "localhost" 
-  ? "http://localhost:5000" 
+  ? "http://localhost:5001" 
   : "https://fiebriticos.onrender.com"; 
 
 function buildPages(page, pages) {

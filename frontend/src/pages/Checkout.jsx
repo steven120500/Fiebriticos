@@ -135,7 +135,7 @@ export default function Checkout() {
 
       if (esZonaGam) {
         const esCartago = selectedProvincia === "3";
-        const precioMensajero = esCartago ? 5000 : 4000;
+        const precioMensajero = esCartago ? 5001 : 4000;
         nuevasOpciones.push({
           id: 'mensajero',
           nombre: 'Mensajero Privado',
