@@ -184,7 +184,7 @@ export default function App() {
 
               {canAdd && (
                 <button 
-                  className="fixed bottom-10 right-10 bg-blue-600 text-fiebriAzul w-16 h-16 rounded-2xl shadow-2xl z-50 flex items-center justify-center hover:scale-110 active:scale-95 transition-all"
+                  className="fixed bottom-10 right-10 bg-blue-800 text-fiebriAzul w-16 h-16 rounded-2xl shadow-2xl z-50 flex items-center justify-center hover:scale-110 active:scale-95 transition-all"
                   onClick={() => setShowAddModal(true)}
                 >
 

@@ -441,10 +441,14 @@ export default function ProductDetail({
                 </div>
 
                 <div className="flex flex-col gap-4">
-                  <button onClick={handleBuyWhatsApp} className="boton-fiebri-verde w-full py-5 rounded-2xl text-white font-black text-xl flex items-center justify-center gap-4 shadow-xl active:scale-95">
-                    <FaWhatsapp size={28} /> COMPRAR POR WHATSAPP
-                  </button>
-                </div>
+  <button 
+    onClick={handleBuyWhatsApp} 
+    className="boton-fiebri-verde w-full py-5 rounded-2xl text-white font-black text-xl flex items-center justify-center gap-4 pl-4 shadow-xl active:scale-95"
+  >
+    <FaWhatsapp size={28} /> 
+    <span>COMPRAR POR WHATSAPP</span>
+  </button>
+</div>
 
                 {(isSuperUser || canDelete) && (
                   <div className="mt-16 pt-8 border-t-2 border-fiebriGris">
