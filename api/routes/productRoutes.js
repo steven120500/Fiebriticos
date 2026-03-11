@@ -1,6 +1,6 @@
 import express from 'express';
 import Product from '../models/Product.js';
-import History from '../models/History.js'; // 👈 1. IMPORTAMOS EL HISTORIAL
+import History from '../models/History.js';
 import cloudinary from '../config/cloudinary.js';
 import multer from 'multer';
 
@@ -147,14 +147,14 @@ router.post('/', upload.any(), async (req, res) => {
       isNew,
     });
 
-    // 👈 2. REGISTRAMOS LA CREACIÓN (Ya adaptado a tu History.js)
+    // 👈 REGISTRO DE CREACIÓN (TEXTO LIMPIO)
     const adminUser = req.headers['x-user'] || 'Administrador';
     await History.create({
       user: adminUser,
       action: 'Crear',
       item: product.name,
       productId: product._id,
-      details: { mensaje: 'Se agregó una nueva chema al catálogo' }
+      details: 'Se creó la camiseta y se agregó al catálogo.'
     }).catch(err => console.error("Error guardando historial:", err));
 
     res.status(201).json(product);
@@ -178,6 +178,29 @@ router.put('/:id', async (req, res) => {
     if (typeof incomingBodega === 'string') { try { incomingBodega = JSON.parse(incomingBodega); } catch {} }
     let nextBodega = prev.bodega || {};
     if (incomingBodega && typeof incomingBodega === 'object') nextBodega = sanitizeInv(incomingBodega);
+
+    // 🛠️ LÓGICA DEL COMENTARISTA: Comparar stock viejo vs nuevo
+    let stockChanges = [];
+    const allSizes = new Set([...Object.keys(prev.stock || {}), ...Object.keys(nextStock || {})]);
+    
+    allSizes.forEach(size => {
+      const oldQty = (prev.stock && prev.stock[size]) || 0;
+      const newQty = (nextStock && nextStock[size]) || 0;
+      
+      if (oldQty !== newQty) {
+        if (newQty > oldQty) {
+          stockChanges.push(`Se sumó talla ${size} de ${oldQty} a ${newQty}`);
+        } else {
+          stockChanges.push(`Se restó talla ${size} de ${oldQty} a ${newQty}`);
+        }
+      }
+    });
+
+    // Definimos el mensaje final
+    let historyDetails = "Se modificó la información general (precio, foto, versión).";
+    if (stockChanges.length > 0) {
+      historyDetails = stockChanges.join(" | "); // Si hay varios cambios, los separa con una barrita
+    }
 
     const update = {
       name: req.body.name ? req.body.name.trim().slice(0, 150) : prev.name,
@@ -218,14 +241,14 @@ router.put('/:id', async (req, res) => {
 
     const updated = await Product.findByIdAndUpdate(req.params.id, { $set: update }, { new: true, runValidators: true });
 
-    // 👈 3. REGISTRAMOS LA EDICIÓN (Ya adaptado a tu History.js)
+    // 👈 REGISTRO DE EDICIÓN CON DETALLES ESPECÍFICOS
     const adminUser = req.headers['x-user'] || 'Administrador';
     await History.create({
       user: adminUser,
       action: 'Editar',
       item: updated.name,
       productId: updated._id,
-      details: { mensaje: 'Se modificó la información o el inventario' }
+      details: historyDetails
     }).catch(err => console.error("Error guardando historial:", err));
 
     res.json(updated);
@@ -246,14 +269,14 @@ router.delete('/:id', async (req, res) => {
     const productName = product.name; 
     await product.deleteOne();
 
-    // 👈 4. REGISTRAMOS LA ELIMINACIÓN (Ya adaptado a tu History.js)
+    // 👈 REGISTRO DE ELIMINACIÓN (TEXTO LIMPIO)
     const adminUser = req.headers['x-user'] || 'Administrador';
     await History.create({
       user: adminUser,
       action: 'Eliminar',
       item: productName, 
       productId: req.params.id,
-      details: { mensaje: 'Se sacó esta joya del catálogo' }
+      details: 'Se eliminó la camiseta del sistema por completo.'
     }).catch(err => console.error("Error guardando historial:", err));
 
     res.json({ message: 'Producto eliminado exitosamente' });
