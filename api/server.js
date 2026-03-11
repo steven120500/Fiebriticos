@@ -45,8 +45,8 @@ app.use(cors({
   credentials: true,
 }));
 
-/* -------- CONFIGURACIÓN DE PESO (EL ARREGLO PARA LOCAL) -------- */
-// 🚀 JUGADA MAESTRA: Aumentamos los límites a 50mb para aguantar las fotos pesadas
+/* -------- CONFIGURACIÓN DE PESO (ARREGLO PARA LOCAL Y FOTOS) -------- */
+// 🚀 JUGADA MAESTRA: Aumentamos los límites a 50mb para que no falle al subir fotos
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
@@ -78,7 +78,10 @@ const startServer = async () => {
     await connectDB();
     console.log("🟢 Conexión exitosa a MongoDB Atlas");
 
+    // 🚀 AJUSTE PARA RENDER: Usar el puerto que ellos dan o el 5001 en local
     const PORT = process.env.PORT || 5001;
+
+    // IMPORTANTE: En Render '0.0.0.0' es obligatorio para que sea visible
     app.listen(PORT, '0.0.0.0', () => { 
       console.log(`✅ Server Fiebriticos corriendo en el puerto ${PORT}`);
     });
