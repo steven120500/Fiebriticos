@@ -10,6 +10,7 @@ import connectDB from './config/db.js';
 import productRoutes from './routes/productRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import pdfRoutes from './routes/pdfRoutes.js'; 
+import historyRoutes from './routes/historyRoutes.js'; // 👈 1. IMPORTAMOS LA RUTA DEL HISTORIAL
 
 dotenv.config();
 
@@ -32,7 +33,6 @@ app.use(compression());
 app.use(morgan('dev'));                     
 
 /* -------- CONFIGURACIÓN DE CORS (A PRUEBA DE BALAS) -------- */
-// 👇 Aquí está la corrección: Arreglo directo sin funciones para evitar bloqueos
 app.use(cors({
   origin: [
     'http://localhost:5173',
@@ -41,7 +41,8 @@ app.use(cors({
     'https://fiebriticos.onrender.com'
   ],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'x-user'],
+  // 👇 2. AGREGAMOS 'x-super' PARA QUE EL GUARDA DEJE PASAR AL ADMIN
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-user', 'x-super'],
   credentials: true,
 }));
 
@@ -52,6 +53,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api/auth', authRoutes);
 app.use('/api', pdfRoutes);
 app.use('/api/products', productRoutes);
+app.use('/api/history', historyRoutes); // 👈 3. CONECTAMOS LA RUTA AL SERVIDOR
 
 app.get('/', (req, res) => res.send('⚽ BACKEND FIEBRITICOS ONLINE Y CONECTADO 🚀'));
 

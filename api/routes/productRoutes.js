@@ -1,5 +1,6 @@
 import express from 'express';
 import Product from '../models/Product.js';
+import History from '../models/History.js'; // 👈 1. IMPORTAMOS EL HISTORIAL
 import cloudinary from '../config/cloudinary.js';
 import multer from 'multer';
 
@@ -18,7 +19,7 @@ const ALL_SIZES = new Set([...ADULT_SIZES, ...KID_SIZES, ...BALL_SIZES]);
 function uploadToCloudinary(buffer) {
   return new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
-      { folder: 'fiebriticos_products', resource_type: 'image' }, // 👈 Cambié el folder a fiebriticos_products
+      { folder: 'fiebriticos_products', resource_type: 'image' }, 
       (err, result) => (err ? reject(err) : resolve(result))
     );
     stream.end(buffer);
@@ -47,7 +48,7 @@ router.get('/health', async (_req, res) => {
   }
 });
 
-/** 1. Listado paginado */
+/** 1. Listado paginado (Sin cambios, esto es solo lectura) */
 router.get('/', async (req, res) => {
   try {
     const page = Math.max(parseInt(req.query.page || '1', 10), 1);
@@ -146,6 +147,14 @@ router.post('/', upload.any(), async (req, res) => {
       isNew,
     });
 
+    // 👈 2. REGISTRAMOS LA CREACIÓN EN EL HISTORIAL
+    const adminUser = req.headers['x-user'] || 'Administrador';
+    await History.create({
+      admin: adminUser,
+      action: 'Crear',
+      details: `Se agregó al catálogo: ${product.name}`
+    }).catch(err => console.error("Error guardando historial:", err));
+
     res.status(201).json(product);
   } catch (err) {
     res.status(500).json({ error: err.message || 'Error al crear producto' });
@@ -206,6 +215,15 @@ router.put('/:id', async (req, res) => {
     }
 
     const updated = await Product.findByIdAndUpdate(req.params.id, { $set: update }, { new: true, runValidators: true });
+
+    // 👈 3. REGISTRAMOS LA EDICIÓN EN EL HISTORIAL
+    const adminUser = req.headers['x-user'] || 'Administrador';
+    await History.create({
+      admin: adminUser,
+      action: 'Editar',
+      details: `Se modificó la info/inventario de: ${updated.name}`
+    }).catch(err => console.error("Error guardando historial:", err));
+
     res.json(updated);
   } catch (err) {
     res.status(500).json({ error: 'Error al actualizar producto' });
@@ -221,7 +239,16 @@ router.delete('/:id', async (req, res) => {
     for (const img of product.images || []) {
       if (img.public_id) { try { await cloudinary.uploader.destroy(img.public_id); } catch {} }
     }
+    const productName = product.name; // Guardamos el nombre antes de borrarlo
     await product.deleteOne();
+
+    // 👈 4. REGISTRAMOS LA ELIMINACIÓN EN EL HISTORIAL
+    const adminUser = req.headers['x-user'] || 'Administrador';
+    await History.create({
+      admin: adminUser,
+      action: 'Eliminar',
+      details: `Se sacó del catálogo: ${productName}`
+    }).catch(err => console.error("Error guardando historial:", err));
 
     res.json({ message: 'Producto eliminado exitosamente' });
   } catch (err) {

@@ -87,9 +87,9 @@ export default function HistoryPage({ user }) {
         <div className="flex justify-start mb-8">
             <button 
                 onClick={() => navigate(-1)} 
-                className="flex items-center gap-2 px-6 py-2.5 bg-white text-fiebriAzul border border-gray-200 rounded-2xl hover:bg-fiebriAzul hover:text-white transition-all font-black text-[10px] uppercase tracking-widest shadow-sm"
+                className="flex items-center gap-2 px-6 py-2.5 bg-white text-fiebriAzul border border-gray-200 rounded-2xl hover:bg-fiebriAzul  transition-all font-black text-[10px] uppercase tracking-widest shadow-sm"
             >
-                <FaArrowLeft /> Regresar al Panel
+                <FaArrowLeft /> Regresar
             </button>
         </div>
 

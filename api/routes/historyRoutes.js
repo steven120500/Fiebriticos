@@ -32,8 +32,17 @@ router.get('/', async (req, res) => {
 /* ========= DELETE: Limpiar historial (solo super) ========= */
 router.delete('/', async (req, res) => {
     try {
+        // 🛡️ DEFENSA DE HIERRO: Verificamos si la petición trae la credencial de Super Admin
+        const isSuper = req.headers['x-super'] === 'true';
+
+        if (!isSuper) {
+            console.warn("🚩 Intento no autorizado de borrar historial");
+            return res.status(403).json({ error: "¡Tarjeta Roja! Solo los directivos pueden vaciar la bitácora." });
+        }
+
+        // Si es el Super Admin, procedemos a borrar todo
         await History.deleteMany({});
-        res.json({ ok: true, message: "Historial eliminado" });
+        res.json({ ok: true, message: "El historial de la temporada ha sido limpiado" });
     } catch (err) {
         console.error('Error al limpiar historial:', err);
         res.status(500).json({ error: 'Error al limpiar historial' });
