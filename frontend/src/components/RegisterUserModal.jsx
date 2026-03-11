@@ -67,7 +67,7 @@ export default function RegisterUserModal({ onClose }) {
       const data = await res.json();
 
       if (res.ok) {
-        toast.success("✅ Fichaje completado: Usuario creado");
+        toast.success("✅ Perfecto: Usuario creado");
         onClose?.(); 
       } else {
         toast.error(data.message || "Error al registrar");
@@ -95,7 +95,7 @@ export default function RegisterUserModal({ onClose }) {
           </button>
           
           <h2 className="text-3xl font-black text-white italic uppercase tracking-tighter">
-            Nuevo <span className="text-fiebriVerde">Fichaje</span>
+            Agregar <span className="text-fiebriVerde">Usuario</span>
           </h2>
           <p className="text-white/60 font-bold text-[10px] uppercase tracking-widest mt-2">
             Registro de Administradores

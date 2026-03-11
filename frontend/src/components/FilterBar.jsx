@@ -54,7 +54,7 @@ export default function FilterBar({
   const hasActiveFilters = filterType || filterSizes?.length > 0 || searchTerm;
 
   return (
-    <div className="sticky top-[80px] sm:top-[100px] z-40 bg-white/90 backdrop-blur-xl py-4 px-4 mb-10 border-b border-gray-200 shadow-sm">
+    <div id="search-section" className="sticky top-[80px] sm:top-[100px] z-40 bg-white/90 backdrop-blur-xl py-4 px-4 mb-10 border-b border-gray-200 shadow-sm">
       <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center justify-between gap-4">
         
         {/* 🔍 BUSCADOR */}

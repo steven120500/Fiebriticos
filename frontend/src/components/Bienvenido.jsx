@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { FaFutbol, FaFilter } from "react-icons/fa";
+import { FaFutbol } from "react-icons/fa";
 
-export default function Bienvenido() {
+export default function Bienvenido({ setFilterType }) {
   const [activeIndex, setActiveIndex] = useState(0);
 
-  // 🔹 Nuestras 3 joyas estrella (Las imágenes se leen directo de la carpeta public)
+  // 🔹 Nuestras 3 joyas estrella
   const chemas = [
     { id: "Player", name: "Versión Player", img: "/PlayerB.png", desc: "Ajuste Profesional" },
     { id: "Fan", name: "Versión Fan", img: "/FanB.png", desc: "Máximo Confort" },
@@ -27,9 +27,19 @@ export default function Bienvenido() {
   };
 
   const handleFiltrar = (tipo) => {
-    // Aquí disparamos el evento para que la app sepa qué filtrar y bajamos el scroll
-    window.dispatchEvent(new Event(`filtrar${tipo}`));
-    window.scrollTo({ top: 800, behavior: 'smooth' });
+    // 1. Activamos el filtro en la App
+    if (setFilterType) {
+      setFilterType(tipo);
+    }
+    
+    // 2. Bajamos suavemente al catálogo (FilterBar tiene el ID search-section)
+    const catalogElement = document.getElementById("search-section");
+    if (catalogElement) {
+      catalogElement.scrollIntoView({ behavior: "smooth" });
+    } else {
+      // Si no encuentra el ID, baja una cantidad fija de pixeles
+      window.scrollTo({ top: 800, behavior: 'smooth' });
+    }
   };
 
   return (
@@ -51,7 +61,7 @@ export default function Bienvenido() {
         <FaFutbol />
       </motion.div>
 
-      {/* 🏟️ Contenedor Principal (Dividido en 2 columnas en Desktop) */}
+      {/* 🏟️ Contenedor Principal */}
       <div className="max-w-7xl mx-auto relative z-10 w-full flex flex-col lg:flex-row items-center justify-between gap-12 mt-10">
         
         {/* 🔹 MITAD IZQUIERDA: Textos y Botones */}
@@ -61,19 +71,20 @@ export default function Bienvenido() {
           variants={{ show: { transition: { staggerChildren: 0.15 } } }}
           className="lg:w-1/2 flex flex-col items-center lg:items-start text-center lg:text-left"
         >
-        
-          
           <motion.h1 variants={itemVariants} className="text-6xl md:text-8xl lg:text-[7rem] font-black text-white italic uppercase leading-[0.85] tracking-tighter mb-6 drop-shadow-2xl">
             FIEBRI<br />
             <span className="text-fiebriVerde">TICOS</span>
           </motion.h1>
           
-          <motion.p variants={itemVariants} className="text-white/80 text-lg md:text-xl font-medium max-w-lg mb-10 leading-relaxed">
+          <motion.p 
+            variants={itemVariants} 
+            className="hidden md:block text-white/80 text-lg md:text-xl font-medium max-w-lg mb-10 leading-relaxed"
+          >
             Las mejores chemas del país con la calidad que solo un verdadero fiebre reconoce.
           </motion.p>
 
           <motion.div variants={itemVariants} className="flex flex-col sm:flex-row flex-wrap justify-center lg:justify-start gap-4 w-full sm:w-auto">
-            
+            {/* Espacio para botones adicionales si los necesitas luego */}
           </motion.div>
         </motion.div>
 
@@ -111,7 +122,6 @@ export default function Bienvenido() {
                     {chema.desc}
                   </p>
                   
-                  {/* El botón aparece mágicamente cuando está activo */}
                   <AnimatePresence>
                     {isActive && (
                       <motion.button
@@ -119,10 +129,10 @@ export default function Bienvenido() {
                         animate={{ opacity: 1, height: "auto", marginTop: 12 }}
                         exit={{ opacity: 0, height: 0, marginTop: 0 }}
                         onClick={(e) => {
-                          e.stopPropagation(); // Evita que se dispare el click del contenedor
+                          e.stopPropagation();
                           handleFiltrar(chema.id);
                         }}
-                        className="bg-white text-green-600 text-[10px] sm:text-xs font-black uppercase tracking-widest px-5 py-2.5 rounded-xl flex items-center gap-2 shadow-lg hover:scale-105 active:scale-95 transition-transform"
+                        className="bg-white text-blue-600 text-[10px] sm:text-xs font-black uppercase tracking-widest px-5 py-2.5 rounded-xl flex items-center gap-2 shadow-lg hover:scale-105 active:scale-95 transition-transform"
                       >
                          Ver Modelos
                       </motion.button>
@@ -133,7 +143,6 @@ export default function Bienvenido() {
             );
           })}
         </div>
-
       </div>
     </section>
   );

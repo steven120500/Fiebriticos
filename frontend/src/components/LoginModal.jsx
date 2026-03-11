@@ -90,7 +90,7 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
       if (!res.ok) throw new Error(data.message || 'Credenciales incorrectas o error de servidor');
 
       if (mode === 'register') {
-        toast.success('¡Fichaje exitoso! Ya puedes entrar al equipo.');
+        toast.success('¡Perfecto! Ya puedes entrar.');
         setMode('login');
       } else {
         // Mapeo seguro de datos del usuario
@@ -141,8 +141,8 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
             <FiX size={24} />
           </button>
           <h2 className="text-3xl font-black text-white italic uppercase tracking-tighter">
-            {mode === 'login' && 'Entrar al Club'}
-            {mode === 'register' && 'Nuevo Fichaje'}
+            {mode === 'login' && 'Entrar'}
+            {mode === 'register' && 'Registrarse'}
             {mode === 'forgot' && 'Recuperar Clave'}
           </h2>
           <p className="text-fiebriVerde font-bold text-[10px] uppercase tracking-widest mt-2">Sistema de Gestión Fiebriticos</p>
@@ -196,8 +196,8 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
                 className="boton-fiebri-verde w-full py-4 rounded-2xl text-white font-black text-lg shadow-xl uppercase tracking-tighter italic transition-all active:scale-95 disabled:opacity-50"
             >
               {loading ? 'Procesando...' : (
-                  mode === 'login' ? '¡Entrar a la Cancha!' : 
-                  mode === 'register' ? 'Confirmar Fichaje' : 'Enviar Instrucciones'
+                  mode === 'login' ? '¡Entrar!' : 
+                  mode === 'register' ? 'Confirmar' : 'Enviar Instrucciones'
               )}
             </button>
 

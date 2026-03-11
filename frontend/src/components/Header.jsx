@@ -133,7 +133,7 @@ export default function Header({
                           <FaUser size={16} className="text-fiebriVerde"/> Registrar Usuario
                         </button>
                         <button onClick={() => { setShowUserListModal(true); setSidebarOpen(false); }} className="w-full text-fiebriAzul font-bold text-left px-5 py-3.5 rounded-2xl hover:bg-fiebriGris transition flex items-center gap-4">
-                          <FaUser size={16} className="text-fiebriVerde"/> Lista de Staff
+                          <FaUser size={16} className="text-fiebriVerde"/> Lista de usuarios
                         </button>
                       </>
                     )}

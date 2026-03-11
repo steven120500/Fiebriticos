@@ -269,7 +269,7 @@ export default function AddProductModal({ onAdd, onCancel, user }) {
             disabled={loading}
             className="w-full boton-fiebri-verde py-5 rounded-2xl text-white font-black uppercase tracking-[0.2em] shadow-xl hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50"
           >
-            {loading ? "Registrando Fichaje..." : "Publicar Chema"}
+            {loading ? "Registrando ..." : "Publicar Chema"}
           </button>
         </div>
       </motion.div>

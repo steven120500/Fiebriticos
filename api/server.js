@@ -31,23 +31,15 @@ app.set('trust proxy', 1);
 app.use(compression());                     
 app.use(morgan('dev'));                     
 
-/* -------- CONFIGURACIÓN DE CORS -------- */
-const allowedOrigins = [
-  'http://localhost:5173',
-  'http://127.0.0.1:5173',
-  'https://fiebriticos-catalogo.onrender.com',
-  'https://fiebriticos.onrender.com' // Agregamos el dominio del backend mismo por si acaso
-];
-
+/* -------- CONFIGURACIÓN DE CORS (A PRUEBA DE BALAS) -------- */
+// 👇 Aquí está la corrección: Arreglo directo sin funciones para evitar bloqueos
 app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      console.error(`🚩 Bloqueado por CORS: ${origin}`);
-      callback(new Error('No permitido por la política de seguridad CORS'));
-    }
-  },
+  origin: [
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
+    'https://fiebriticos-catalogo.onrender.com',
+    'https://fiebriticos.onrender.com'
+  ],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'x-user'],
   credentials: true,
@@ -56,14 +48,14 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-/* -------- RUTAS DE LA API (Fuera del startServer para evitar errores de carga) -------- */
+/* -------- RUTAS DE LA API -------- */
 app.use('/api/auth', authRoutes);
 app.use('/api', pdfRoutes);
 app.use('/api/products', productRoutes);
 
 app.get('/', (req, res) => res.send('⚽ BACKEND FIEBRITICOS ONLINE Y CONECTADO 🚀'));
 
-// 2. Middleware Global de Errores (¡Esto faltaba!)
+// 2. Middleware Global de Errores
 app.use((err, req, res, next) => {
   console.error("💥 Error Detectado:", err.stack);
   res.status(500).json({ 
@@ -80,12 +72,11 @@ app.use((req, res) => {
 /* -------- INICIO DEL SERVIDOR -------- */
 const startServer = async () => {
   try {
-    // 3. Opciones de conexión reforzadas
     await connectDB();
     console.log("🟢 Conexión exitosa a MongoDB Atlas");
 
     const PORT = process.env.PORT || 5000;
-    app.listen(PORT, '0.0.0.0', () => { // Agregamos '0.0.0.0' para que Render no tenga problemas de bind
+    app.listen(PORT, '0.0.0.0', () => { 
       console.log(`✅ Server Fiebriticos corriendo en el puerto ${PORT}`);
     });
 
@@ -95,10 +86,9 @@ const startServer = async () => {
   }
 };
 
-// 4. Captura de errores fuera de las promesas (Uncaught Exceptions)
+// 4. Captura de errores fuera de las promesas
 process.on('unhandledRejection', (err) => {
   console.log('🚩 Error no manejado (Unhandled Rejection):', err.message);
-  // No cerramos el proceso para que Render pueda intentar recuperarlo
 });
 
 startServer();
