@@ -22,7 +22,6 @@ import Bienvenido from "./components/Bienvenido";
 import FilterBar from "./components/FilterBar";
 
 // --- UTILS & ASSETS ---
-import tallaPorTipo from "./utils/tallaPorTipo";
 import { FaPlus, FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -35,7 +34,10 @@ import Checkout from "./pages/Checkout.jsx";
 import OrdersPage from "./pages/OrdersPage.jsx"; 
 import HistoryPage from "./pages/HistoryPage.jsx";
 
-const API_BASE = "https://fiebriticos.onrender.com"; 
+// 🚀 JUGADA INTELIGENTE: Detecta si es local o producción
+const API_BASE = window.location.hostname === "localhost" 
+  ? "http://localhost:5000" 
+  : "https://fiebriticos.onrender.com"; 
 
 function buildPages(page, pages) {
   const out = new Set([1, pages, page, page - 1, page - 2, page + 1, page + 2]);
@@ -72,18 +74,11 @@ export default function App() {
     } catch { return null; }
   });
 
-  // 🔹 VALIDACIÓN DE SUPER USUARIO CORREGIDA
-  // Esto atrapa todos los casos posibles que mande tu base de datos
-  const isSuperUser = user?.isSuperUser === true || user?.role === "admin" || user?.role === "superadmin" || user?.role === "super_user";
+  const isSuperUser = user?.isSuperUser === true || user?.role === "admin" || user?.role === "superadmin";
   
   const canSeeHistory = isSuperUser || (user?.roles && user.roles.includes("history"));
   const canAdd = isSuperUser || (user?.roles && user.roles.includes("add"));
   const canEdit = isSuperUser || (user?.roles && user.roles.includes("edit"));
-
-  // 🧪 TEST DEL VAR (Revisá la consola del navegador con F12)
-  console.log("👤 Usuario actual:", user);
-  console.log("👑 ¿Es super usuario?:", isSuperUser);
-  console.log("➕ ¿Puede agregar chemas?:", canAdd);
 
   const handleLogout = () => {
     setUser(null);
@@ -96,7 +91,7 @@ export default function App() {
     const p = opts.page ?? page;
     const q = (opts.q ?? searchTerm).trim();
     const tp = (opts.type ?? filterType).trim();
-    const sizes = (opts.sizes ?? filterSizes).join(",");
+    const szs = (opts.sizes ?? filterSizes).join(",");
     
     setLoading(true);
     try {
@@ -105,14 +100,14 @@ export default function App() {
         limit: String(limit),
         ...(q ? { q } : {}),
         ...(tp ? { type: tp } : {}),
-        ...(sizes ? { sizes } : {}),
+        ...(szs ? { sizes: szs } : {}),
       });
 
       const res = await fetch(`${API_BASE}/api/products?${params.toString()}`);
       if (!res.ok) throw new Error();
       const json = await res.json();
-      setProducts(json.items);
-      setTotal(json.total);
+      setProducts(json.items || []);
+      setTotal(json.total || 0);
     } catch {
       setProducts([]);
     } finally {
@@ -150,7 +145,6 @@ export default function App() {
           
           <Route path="/" element={
             <div className="bg-fiebriGris min-h-screen">
-              {/* MODALES GLOBALES */}
               <AnimatePresence>
                 {showRegisterUserModal && <RegisterUserModal onClose={() => setShowRegisterUserModal(false)} />}
                 {showUserListModal && <UserListModal open={showUserListModal} onClose={() => setShowUserListModal(false)} />}
@@ -161,13 +155,12 @@ export default function App() {
               
               {loading && <LoadingOverlay />}
 
-              {/* NAVEGACIÓN FIJA */}
               <div className="fixed top-0 left-0 w-full z-50">
                 <TopBanner />
                 <Header
                   onLoginClick={() => setShowLogin(true)}
                   onLogout={handleLogout}
-                  onLogoClick={() => { setFilterType(""); setSearchTerm(""); setPage(1); }}
+                  onLogoClick={() => { setFilterType(""); setSearchTerm(""); setPage(1); setFilterSizes([]); }}
                   onMedidasClick={() => setShowMedidas(true)}
                   user={user}
                   isSuperUser={isSuperUser}
@@ -177,24 +170,20 @@ export default function App() {
                 />
               </div>
 
-              {/* ESPACIADOR Y HERO */}
               <div className="h-28 sm:h-32" />
               <Bienvenido />
 
-              {/* BARRA DE FILTROS STICKY */}
               <FilterBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} filterType={filterType} setFilterType={setFilterType} filterSizes={filterSizes} setFilterSizes={setFilterSizes} />
 
-              {/* BOTÓN FLOTANTE ADMIN */}
               {canAdd && (
                 <button 
-                  className="fixed bottom-10 right-10 boton-fiebri-verde w-16 h-16 rounded-2xl shadow-2xl z-50 flex items-center justify-center text-white hover:scale-110 active:scale-95 transition-all"
+                  className="fixed bottom-10 right-10 bg-fiebriVerde text-fiebriAzul w-16 h-16 rounded-2xl shadow-2xl z-50 flex items-center justify-center hover:scale-110 active:scale-95 transition-all"
                   onClick={() => setShowAddModal(true)}
                 >
                   <FaPlus size={24} />
                 </button>
               )}
 
-              {/* GRILLA DE PRODUCTOS */}
               <main className="max-w-7xl mx-auto px-6 pb-20">
                 <div ref={pageTopRef} className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 sm:gap-8">
                   {products.map((product) => (
@@ -208,7 +197,6 @@ export default function App() {
                   ))}
                 </div>
 
-                {/* PAGINACIÓN ESTILO FIEBRITICOS */}
                 {pages > 1 && (
                   <div className="mt-16 flex justify-center items-center gap-3">
                     <button 

@@ -17,7 +17,11 @@ import LoginModal from '../components/LoginModal';
 import RegisterUserModal from '../components/RegisterUserModal'; 
 import Medidas from '../components/Medidas';
 
-const API_BASE = import.meta.env.VITE_API_URL || "https://fiebriticos.onrender.com";
+// 🚀 JUGADA INTELIGENTE: Detecta si es local o producción
+const API_BASE = window.location.hostname === "localhost" 
+  ? "http://localhost:5000" 
+  : "https://fiebriticos.onrender.com"; 
+
 const TALLAS_ADULTO = ['S', 'M', 'L', 'XL', 'XXL', '3XL', '4XL'];
 const TALLAS_NINO   = ['16', '18', '20', '22', '24', '26', '28'];
 const TALLAS_BALON  = ['3', '4', '5'];
@@ -69,7 +73,7 @@ export default function ProductDetail({
         setProduct(data);
         syncEditState(data);
       } catch (err) {
-        toast.error("Error cargando el producto");
+        console.error("Error cargando el producto:", err);
         setProduct(null);
       } finally {
         setLoadingFetch(false);
@@ -173,7 +177,6 @@ export default function ProductDetail({
     setShowDecisionModal(true);
   };
 
-  // 🛡️ PROTECCIÓN ANTI-CRASH 1: Cargando
   if (loadingFetch) return (
     <div className="h-screen bg-fiebriGris flex flex-col items-center justify-center">
       <FaFutbol className="text-fiebriAzul text-5xl animate-spin mb-4" />
@@ -181,7 +184,6 @@ export default function ProductDetail({
     </div>
   );
 
-  // 🛡️ PROTECCIÓN ANTI-CRASH 2: Producto no encontrado
   if (!product) return (
     <div className="h-screen bg-fiebriGris flex flex-col items-center justify-center px-6 text-center">
       <FaExclamationTriangle className="text-red-500 text-6xl mb-4" />
@@ -191,7 +193,6 @@ export default function ProductDetail({
     </div>
   );
 
-  // Lógica segura después de cargar
   const currentSrc = localImages[idx]?.src || PLACEHOLDER_IMG;
   const currentType = isEditing ? editedType : product.type;
   const tallasVisibles = currentType === 'Balón' ? TALLAS_BALON : (currentType === 'Niño' ? TALLAS_NINO : TALLAS_ADULTO);
