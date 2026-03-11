@@ -10,7 +10,7 @@ import connectDB from './config/db.js';
 import productRoutes from './routes/productRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import pdfRoutes from './routes/pdfRoutes.js'; 
-import historyRoutes from './routes/historyRoutes.js'; // 👈 1. IMPORTAMOS LA RUTA DEL HISTORIAL
+import historyRoutes from './routes/historyRoutes.js'; 
 
 dotenv.config();
 
@@ -41,19 +41,20 @@ app.use(cors({
     'https://fiebriticos.onrender.com'
   ],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  // 👇 2. AQUÍ ESTÁ EL ARREGLO: Agregamos 'x-roles' a la lista VIP
   allowedHeaders: ['Content-Type', 'Authorization', 'x-user', 'x-super', 'x-roles'],
   credentials: true,
 }));
 
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true }));
+/* -------- CONFIGURACIÓN DE PESO (EL ARREGLO PARA LOCAL) -------- */
+// 🚀 JUGADA MAESTRA: Aumentamos los límites a 50mb para aguantar las fotos pesadas
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 /* -------- RUTAS DE LA API -------- */
 app.use('/api/auth', authRoutes);
 app.use('/api', pdfRoutes);
 app.use('/api/products', productRoutes);
-app.use('/api/history', historyRoutes); // 👈 3. CONECTAMOS LA RUTA AL SERVIDOR
+app.use('/api/history', historyRoutes); 
 
 app.get('/', (req, res) => res.send('⚽ BACKEND FIEBRITICOS ONLINE Y CONECTADO 🚀'));
 

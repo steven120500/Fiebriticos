@@ -51,7 +51,7 @@ export default function FilterBar({
     setOpenDropdown(null);
   };
 
-  const hasActiveFilters = filterType || filterSizes?.length > 0 || searchTerm;
+  const hasActiveFilters = filterType !== "" || filterSizes?.length > 0 || searchTerm !== "";
 
   return (
     <div id="search-section" className="sticky top-[80px] sm:top-[100px] z-40 bg-white/90 backdrop-blur-xl py-4 px-4 mb-10 border-b border-gray-200 shadow-sm">
@@ -81,12 +81,13 @@ export default function FilterBar({
             <button
               onClick={() => setOpenDropdown(openDropdown === "type" ? null : "type")}
               className={`flex items-center justify-between gap-3 px-6 py-3 rounded-[2rem] text-xs font-black transition-all border-2
-                ${openDropdown === "type" || filterType 
+                ${openDropdown === "type" || filterType !== "" 
                   ? "!bg-[#203a95] !text-white border-transparent shadow-md" 
                   : "bg-white text-[#203a95] border-gray-200 hover:border-[#203a95]/30 shadow-sm"
                 }`}
             >
-              <span>{filterType || "Versión"}</span>
+              {/* 🚀 Muestra el filtro activo o "Versión" por defecto */}
+              <span>{filterType === "" ? "Versión" : filterType}</span>
               <FaChevronDown className={`text-[10px] transition-transform duration-300 ${openDropdown === "type" ? "rotate-180" : ""}`} />
             </button>
 
@@ -98,23 +99,28 @@ export default function FilterBar({
                   exit={{ opacity: 0, y: 10, scale: 0.95 }}
                   className="absolute top-full left-0 mt-2 w-48 bg-white border-2 border-gray-100 rounded-2xl shadow-2xl p-2 z-50 overflow-y-auto max-h-60"
                 >
-                  {categories.map((cat) => (
-                    <button
-                      key={cat}
-                      onClick={() => {
-                        setFilterType(cat === "Todos" ? "" : cat);
-                        setOpenDropdown(null);
-                      }}
-                      className={`w-full text-left px-4 py-2.5 rounded-xl text-xs font-black transition-colors flex justify-between items-center
-                        ${(filterType === cat || (cat === "Todos" && !filterType))
-                          ? "!bg-[#203a95] !text-white"
-                          : "text-gray-500 hover:bg-gray-50 hover:text-[#203a95]"
-                        }`}
-                    >
-                      {cat}
-                      {(filterType === cat || (cat === "Todos" && !filterType)) && <FaCheck className="text-white text-[10px]" />}
-                    </button>
-                  ))}
+                  {categories.map((cat) => {
+                    // 🚀 Sincronización: Si el filtro es "" (vacío), marcamos "Todos"
+                    const isSelected = (cat === "Todos" && filterType === "") || filterType === cat;
+
+                    return (
+                      <button
+                        key={cat}
+                        onClick={() => {
+                          setFilterType(cat === "Todos" ? "" : cat);
+                          setOpenDropdown(null);
+                        }}
+                        className={`w-full text-left px-4 py-2.5 rounded-xl text-xs font-black transition-colors flex justify-between items-center
+                          ${isSelected
+                            ? "!bg-[#203a95] !text-white"
+                            : "text-gray-500 hover:bg-gray-50 hover:text-[#203a95]"
+                          }`}
+                      >
+                        {cat}
+                        {isSelected && <FaCheck className="text-white text-[10px]" />}
+                      </button>
+                    );
+                  })}
                 </motion.div>
               )}
             </AnimatePresence>

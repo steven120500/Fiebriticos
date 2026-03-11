@@ -37,7 +37,6 @@ export default function Bienvenido({ setFilterType }) {
     if (catalogElement) {
       catalogElement.scrollIntoView({ behavior: "smooth" });
     } else {
-      // Si no encuentra el ID, baja una cantidad fija de pixeles
       window.scrollTo({ top: 800, behavior: 'smooth' });
     }
   };
@@ -64,7 +63,7 @@ export default function Bienvenido({ setFilterType }) {
       {/* 🏟️ Contenedor Principal */}
       <div className="max-w-7xl mx-auto relative z-10 w-full flex flex-col lg:flex-row items-center justify-between gap-12 mt-10">
         
-        {/* 🔹 MITAD IZQUIERDA: Textos y Botones */}
+        {/* 🔹 MITAD IZQUIERDA: Textos */}
         <motion.div
           initial="hidden"
           animate="show"
@@ -82,13 +81,9 @@ export default function Bienvenido({ setFilterType }) {
           >
             Las mejores chemas del país con la calidad que solo un verdadero fiebre reconoce.
           </motion.p>
-
-          <motion.div variants={itemVariants} className="flex flex-col sm:flex-row flex-wrap justify-center lg:justify-start gap-4 w-full sm:w-auto">
-            {/* Espacio para botones adicionales si los necesitas luego */}
-          </motion.div>
         </motion.div>
 
-        {/* 🔹 MITAD DERECHA: Animación de las 3 Chemas */}
+        {/* 🔹 MITAD DERECHA: Animación de las 3 Chemas con botones dinámicos */}
         <div className="lg:w-5/12 w-full flex flex-col gap-4 relative">
           {chemas.map((chema, index) => {
             const isActive = index === activeIndex;
@@ -113,7 +108,7 @@ export default function Bienvenido({ setFilterType }) {
                   />
                 </div>
 
-                {/* Textos y Botón Interno */}
+                {/* Textos y Botón Interno Dinámico */}
                 <div className="ml-2 sm:ml-6 flex-1">
                   <h3 className={`text-xl sm:text-2xl font-black uppercase italic tracking-tighter transition-colors ${isActive ? "text-fiebriAzul" : "text-white"}`}>
                     {chema.name}
@@ -132,9 +127,9 @@ export default function Bienvenido({ setFilterType }) {
                           e.stopPropagation();
                           handleFiltrar(chema.id);
                         }}
-                        className="bg-white text-blue-600 text-[10px] sm:text-xs font-black uppercase tracking-widest px-5 py-2.5 rounded-xl flex items-center gap-2 shadow-lg hover:scale-105 active:scale-95 transition-transform"
+                        className="bg-white text-blue-900 text-[10px] sm:text-xs font-black uppercase tracking-widest px-5 py-2.5 rounded-xl flex items-center gap-2 shadow-lg hover:scale-105 active:scale-95 transition-transform"
                       >
-                         Ver Modelos
+                         Ver {chema.id} {/* 👈 Aquí el botón cambia según la ID (Player, Fan o Retro) */}
                       </motion.button>
                     )}
                   </AnimatePresence>

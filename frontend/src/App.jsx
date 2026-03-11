@@ -48,7 +48,7 @@ export default function App() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterType, setFilterType] = useState("");
+  const [filterType, setFilterType] = useState(""); // 👈 El estado que manda
   const [filterSizes, setFilterSizes] = useState([]);
 
   // Estados de Modales
@@ -169,9 +169,18 @@ export default function App() {
               </div>
 
               <div className="h-28 sm:h-32" />
-              <Bienvenido />
+              
+              {/* 🚀 JUGADA MAESTRA: Ahora le pasamos setFilterType a Bienvenido */}
+              <Bienvenido setFilterType={setFilterType} />
 
-              <FilterBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} filterType={filterType} setFilterType={setFilterType} filterSizes={filterSizes} setFilterSizes={setFilterSizes} />
+              <FilterBar 
+                searchTerm={searchTerm} 
+                setSearchTerm={setSearchTerm} 
+                filterType={filterType} 
+                setFilterType={setFilterType} 
+                filterSizes={filterSizes} 
+                setFilterSizes={setFilterSizes} 
+              />
 
               {canAdd && (
                 <button 
