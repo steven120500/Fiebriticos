@@ -387,10 +387,7 @@ export default function ProductDetail({
                 </div>
 
                 <div className="flex flex-col gap-4">
-                  <button onClick={handleAddToCart} className="w-full bg-fiebriAzul text-white py-5 rounded-2xl font-black text-xl hover:bg-fiebriAzul/90 transition-all shadow-xl flex items-center justify-center gap-4 active:scale-95 group">
-                    <FaShoppingCart className="group-hover:rotate-12 transition-transform" /> 
-                    AGREGAR AL CARRITO
-                  </button>
+                  
                   <button onClick={handleBuyWhatsApp} className="boton-fiebri-verde w-full py-5 rounded-2xl text-white font-black text-xl flex items-center justify-center gap-4 shadow-xl active:scale-95">
                     <FaWhatsapp size={28} /> COMPRAR POR WHATSAPP
                   </button>
