@@ -13,7 +13,7 @@ import pdfRoutes from './routes/pdfRoutes.js';
 
 dotenv.config();
 
-// Validación de variables esenciales
+// 1. Verificación proactiva de variables
 if (!process.env.MONGO_URI) {
   console.error('❌ ERROR FATAL: La variable MONGO_URI no está definida en el .env');
   process.exit(1);
@@ -23,7 +23,7 @@ const app = express();
 
 /* -------- CONFIGURACIÓN DE SEGURIDAD Y OPTIMIZACIÓN -------- */
 app.use(helmet({
-  crossOriginResourcePolicy: { policy: "cross-origin" } // Permite cargar imágenes de otros dominios
+  crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
 app.disable('x-powered-by');                
 app.set('json spaces', 0);                  
@@ -35,48 +35,58 @@ app.use(morgan('dev'));
 const allowedOrigins = [
   'http://localhost:5173',
   'http://127.0.0.1:5173',
-  'https://fiebriticos-catalogo.onrender.com'
+  'https://fiebriticos-catalogo.onrender.com',
+  'https://fiebriticos.onrender.com' // Agregamos el dominio del backend mismo por si acaso
 ];
 
 app.use(cors({
   origin: function (origin, callback) {
-    // Permitir peticiones sin origin (como Postman o apps móviles) o si está en la lista blanca
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
       console.error(`🚩 Bloqueado por CORS: ${origin}`);
-      callback(new Error('No permitido por la política de seguridad CORS de Fiebriticos'));
+      callback(new Error('No permitido por la política de seguridad CORS'));
     }
   },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'x-user'], // Importante para tu sistema de Admin
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-user'],
   credentials: true,
 }));
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-/* -------- CONEXIÓN A BASE DE DATOS -------- */
+/* -------- RUTAS DE LA API (Fuera del startServer para evitar errores de carga) -------- */
+app.use('/api/auth', authRoutes);
+app.use('/api', pdfRoutes);
+app.use('/api/products', productRoutes);
+
+app.get('/', (req, res) => res.send('⚽ BACKEND FIEBRITICOS ONLINE Y CONECTADO 🚀'));
+
+// 2. Middleware Global de Errores (¡Esto faltaba!)
+app.use((err, req, res, next) => {
+  console.error("💥 Error Detectado:", err.stack);
+  res.status(500).json({ 
+    error: 'Error interno en los vestuarios', 
+    message: err.message 
+  });
+});
+
+// Manejo de rutas 404
+app.use((req, res) => {
+  res.status(404).json({ error: 'Ruta no encontrada en el catálogo' });
+});
+
+/* -------- INICIO DEL SERVIDOR -------- */
 const startServer = async () => {
   try {
+    // 3. Opciones de conexión reforzadas
     await connectDB();
     console.log("🟢 Conexión exitosa a MongoDB Atlas");
 
-    /* -------- RUTAS DE LA API -------- */
-    app.use('/api/auth', authRoutes);
-    app.use('/api', pdfRoutes);
-    app.use('/api/products', productRoutes);
-
-    app.get('/', (req, res) => res.send('⚽ BACKEND FIEBRITICOS ONLINE Y CONECTADO 🚀'));
-
-    // Manejo de rutas no encontradas
-    app.use((req, res) => {
-      res.status(404).json({ error: 'Ruta no encontrada en el vestuario' });
-    });
-
     const PORT = process.env.PORT || 5000;
-    app.listen(PORT, () => {
-      console.log(`✅ Server Fiebriticos corriendo en: http://localhost:${PORT}`);
+    app.listen(PORT, '0.0.0.0', () => { // Agregamos '0.0.0.0' para que Render no tenga problemas de bind
+      console.log(`✅ Server Fiebriticos corriendo en el puerto ${PORT}`);
     });
 
   } catch (error) {
@@ -84,5 +94,11 @@ const startServer = async () => {
     process.exit(1);
   }
 };
+
+// 4. Captura de errores fuera de las promesas (Uncaught Exceptions)
+process.on('unhandledRejection', (err) => {
+  console.log('🚩 Error no manejado (Unhandled Rejection):', err.message);
+  // No cerramos el proceso para que Render pueda intentar recuperarlo
+});
 
 startServer();
