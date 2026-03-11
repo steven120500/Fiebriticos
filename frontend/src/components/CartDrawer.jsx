@@ -64,7 +64,7 @@ export default function CartDrawer() {
                     <FaFutbol size={40} className="text-gray-200" />
                   </div>
                   <p className="text-fiebriAzul font-bold text-xl">¿Todavía sin chema?</p>
-                  <p className="text-gray-400 text-sm mt-2">El catálogo está lleno!.</p>
+                  <p className="text-gray-400 text-sm mt-2">El catálogo está lleno de joyas.</p>
                   <button 
                     onClick={toggleCart} 
                     className="mt-8 text-fiebriVerde font-black uppercase tracking-widest hover:scale-110 transition"

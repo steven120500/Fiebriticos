@@ -6,7 +6,7 @@ import multer from 'multer';
 
 const router = express.Router();
 
-/* ================= Multer ================= */
+/* ================= Multer (Para subidas directas) ================= */
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
@@ -16,6 +16,7 @@ const KID_SIZES = ['16', '18', '20', '22', '24', '26', '28'];
 const BALL_SIZES = ['3', '4', '5'];
 const ALL_SIZES = new Set([...ADULT_SIZES, ...KID_SIZES, ...BALL_SIZES]);
 
+/** Helper para subir Buffers (Multer) */
 function uploadToCloudinary(buffer) {
   return new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
@@ -26,6 +27,7 @@ function uploadToCloudinary(buffer) {
   });
 }
 
+/** Helper para limpiar stock */
 function sanitizeInv(obj) {
   const clean = {};
   for (const [size, qty] of Object.entries(obj || {})) {
@@ -112,28 +114,36 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-/** 3. Crear producto */
+/** 3. Crear producto (Soporta JSON/Base64 y FormData) */
 router.post('/', upload.any(), async (req, res) => {
   try {
-    const files = (req.files || []).filter((f) => f.fieldname === 'images' || f.fieldname === 'image');
-    const uploaded = await Promise.all(files.map((f) => uploadToCloudinary(f.buffer)));
-    const images = uploaded.map((u) => ({ public_id: u.public_id, url: u.secure_url }));
+    let images = [];
+
+    // 🚀 JUGADA PARA BASE64 (JSON)
+    if (req.body.images && Array.isArray(req.body.images)) {
+      const uploadPromises = req.body.images.map(imgBase64 => 
+        cloudinary.uploader.upload(imgBase64, { folder: 'fiebriticos_products' })
+      );
+      const results = await Promise.all(uploadPromises);
+      images = results.map(u => ({ public_id: u.public_id, url: u.secure_url }));
+    } 
+    // 🚀 JUGADA PARA BINARIOS (Multer/FormData)
+    else if (req.files && req.files.length > 0) {
+      const files = req.files.filter(f => f.fieldname === 'images' || f.fieldname === 'image');
+      const uploaded = await Promise.all(files.map(f => uploadToCloudinary(f.buffer)));
+      images = uploaded.map(u => ({ public_id: u.public_id, url: u.secure_url }));
+    }
+
     const imageSrc = images[0]?.url || '';
 
+    // Procesar Stock
     let stock = {};
     try {
       if (typeof req.body.stock === 'string') stock = JSON.parse(req.body.stock);
-      else if (typeof req.body.sizes === 'string') stock = JSON.parse(req.body.sizes);
       else if (typeof req.body.stock === 'object') stock = req.body.stock;
     } catch { stock = {}; }
     
-    let bodega = {};
-    try {
-      if (typeof req.body.bodega === 'string') bodega = JSON.parse(req.body.bodega);
-      else if (typeof req.body.bodega === 'object') bodega = req.body.bodega;
-    } catch { bodega = {}; }
-
-    const isNew = req.body.isNew === 'true' || req.body.isNew === true || req.body.isNew === 'on';
+    const isNew = req.body.isNew === 'true' || req.body.isNew === true;
 
     const product = await Product.create({
       name: String(req.body.name || '').trim(),
@@ -141,13 +151,12 @@ router.post('/', upload.any(), async (req, res) => {
       discountPrice: req.body.discountPrice ? Number(req.body.discountPrice) : null,
       type: String(req.body.type || '').trim(),
       stock: sanitizeInv(stock),
-      bodega: sanitizeInv(bodega),
       imageSrc,
       images,
       isNew,
     });
 
-    // 👈 REGISTRO DE CREACIÓN (TEXTO LIMPIO)
+    // Registro de Historial
     const adminUser = req.headers['x-user'] || 'Administrador';
     await History.create({
       user: adminUser,
@@ -155,10 +164,11 @@ router.post('/', upload.any(), async (req, res) => {
       item: product.name,
       productId: product._id,
       details: 'Se creó la camiseta y se agregó al catálogo.'
-    }).catch(err => console.error("Error guardando historial:", err));
+    }).catch(err => console.error("Error historial:", err));
 
     res.status(201).json(product);
   } catch (err) {
+    console.error("❌ Error en POST /api/products:", err);
     res.status(500).json({ error: err.message || 'Error al crear producto' });
   }
 });
@@ -166,93 +176,53 @@ router.post('/', upload.any(), async (req, res) => {
 /** 4. Actualizar producto */
 router.put('/:id', async (req, res) => {
   try {
-    const prev = await Product.findById(req.params.id).lean();
+    const prev = await Product.findById(req.params.id);
     if (!prev) return res.status(404).json({ error: 'Producto no encontrado' });
 
-    let incomingStock = req.body.stock;
-    if (typeof incomingStock === 'string') { try { incomingStock = JSON.parse(incomingStock); } catch {} }
     let nextStock = prev.stock;
-    if (incomingStock && typeof incomingStock === 'object') nextStock = sanitizeInv(incomingStock);
-
-    let incomingBodega = req.body.bodega;
-    if (typeof incomingBodega === 'string') { try { incomingBodega = JSON.parse(incomingBodega); } catch {} }
-    let nextBodega = prev.bodega || {};
-    if (incomingBodega && typeof incomingBodega === 'object') nextBodega = sanitizeInv(incomingBodega);
-
-    // 🛠️ LÓGICA DEL COMENTARISTA: Comparar stock viejo vs nuevo
-    let stockChanges = [];
-    const allSizes = new Set([...Object.keys(prev.stock || {}), ...Object.keys(nextStock || {})]);
-    
-    allSizes.forEach(size => {
-      const oldQty = (prev.stock && prev.stock[size]) || 0;
-      const newQty = (nextStock && nextStock[size]) || 0;
-      
-      if (oldQty !== newQty) {
-        if (newQty > oldQty) {
-          stockChanges.push(`Se sumó talla ${size} de ${oldQty} a ${newQty}`);
-        } else {
-          stockChanges.push(`Se restó talla ${size} de ${oldQty} a ${newQty}`);
-        }
-      }
-    });
-
-    // Definimos el mensaje final
-    let historyDetails = "Se modificó la información general (precio, foto, versión).";
-    if (stockChanges.length > 0) {
-      historyDetails = stockChanges.join(" | "); // Si hay varios cambios, los separa con una barrita
-    }
+    if (req.body.stock) nextStock = sanitizeInv(req.body.stock);
 
     const update = {
-      name: req.body.name ? req.body.name.trim().slice(0, 150) : prev.name,
-      type: req.body.type ? req.body.type.trim().slice(0, 40) : prev.type,
+      name: req.body.name ? req.body.name.trim() : prev.name,
+      type: req.body.type ? req.body.type.trim() : prev.type,
       price: Number(req.body.price) || prev.price,
-      discountPrice: (req.body.discountPrice !== undefined && req.body.discountPrice !== '') ? Number(req.body.discountPrice) : prev.discountPrice,
+      discountPrice: req.body.discountPrice !== undefined ? Number(req.body.discountPrice) : prev.discountPrice,
       stock: nextStock,
-      bodega: nextBodega,
+      isNew: req.body.isNew !== undefined ? req.body.isNew : prev.isNew
     };
 
-    if (req.body.isNew !== undefined) update.isNew = req.body.isNew === 'true' || req.body.isNew === true || req.body.isNew === 'on';
-    if (req.body.imageSrc !== undefined) update.imageSrc = req.body.imageSrc || '';
-    if (req.body.imageSrc2 !== undefined) update.imageSrc2 = req.body.imageSrc2 || '';
-    if (req.body.imageAlt !== undefined) update.imageAlt = req.body.imageAlt || '';
-
-    let incomingImages = req.body.images;
-    if (typeof incomingImages === 'string') { try { incomingImages = JSON.parse(incomingImages); } catch {} }
-
-    if (Array.isArray(incomingImages)) {
-      const prevList = prev.images || [];
+    // Procesar imágenes nuevas si vienen en Base64
+    if (Array.isArray(req.body.images)) {
       const normalized = [];
-      for (const raw of incomingImages.slice(0, 5)) {
-        if (!raw) continue;
+      for (const raw of req.body.images) {
         if (typeof raw === 'string' && raw.startsWith('data:')) {
-          const up = await cloudinary.uploader.upload(raw, { folder: 'fiebriticos_products', resource_type: 'image' });
+          const up = await cloudinary.uploader.upload(raw, { folder: 'fiebriticos_products' });
           normalized.push({ public_id: up.public_id, url: up.secure_url });
-        } else if (typeof raw === 'string') {
-          const found = prevList.find((i) => i.url === raw);
-          normalized.push(found ? { public_id: found.public_id, url: found.url } : { public_id: null, url: raw });
-        } else if (raw && typeof raw === 'object' && raw.url) {
-          normalized.push({ public_id: raw.public_id || null, url: raw.url });
+        } else {
+          // Mantener imágenes que ya eran URLs
+          normalized.push({ public_id: null, url: raw });
         }
       }
-      update.images = normalized;
-      update.imageSrc = normalized[0]?.url || '';
-      update.imageSrc2 = normalized[1]?.url || '';
+      if (normalized.length > 0) {
+        update.images = normalized;
+        update.imageSrc = normalized[0].url;
+      }
     }
 
-    const updated = await Product.findByIdAndUpdate(req.params.id, { $set: update }, { new: true, runValidators: true });
+    const updated = await Product.findByIdAndUpdate(req.params.id, { $set: update }, { new: true });
 
-    // 👈 REGISTRO DE EDICIÓN CON DETALLES ESPECÍFICOS
     const adminUser = req.headers['x-user'] || 'Administrador';
     await History.create({
       user: adminUser,
       action: 'Editar',
       item: updated.name,
       productId: updated._id,
-      details: historyDetails
-    }).catch(err => console.error("Error guardando historial:", err));
+      details: 'Se modificó la información del producto.'
+    }).catch(err => console.error("Error historial:", err));
 
     res.json(updated);
   } catch (err) {
+    console.error("❌ Error en PUT /api/products:", err);
     res.status(500).json({ error: 'Error al actualizar producto' });
   }
 });
@@ -266,20 +236,20 @@ router.delete('/:id', async (req, res) => {
     for (const img of product.images || []) {
       if (img.public_id) { try { await cloudinary.uploader.destroy(img.public_id); } catch {} }
     }
+    
     const productName = product.name; 
     await product.deleteOne();
 
-    // 👈 REGISTRO DE ELIMINACIÓN (TEXTO LIMPIO)
     const adminUser = req.headers['x-user'] || 'Administrador';
     await History.create({
       user: adminUser,
       action: 'Eliminar',
       item: productName, 
       productId: req.params.id,
-      details: 'Se eliminó la camiseta del sistema por completo.'
-    }).catch(err => console.error("Error guardando historial:", err));
+      details: 'Se eliminó la camiseta del sistema.'
+    }).catch(err => console.error("Error historial:", err));
 
-    res.json({ message: 'Producto eliminado exitosamente' });
+    res.json({ message: 'Producto eliminado' });
   } catch (err) {
     res.status(500).json({ error: 'Error al eliminar producto' });
   }
