@@ -139,12 +139,10 @@ export default function Header({
                     )}
                     {canSeeHistory && (
                       <button onClick={() => { navigate('/historial'); setSidebarOpen(false); }} className="w-full text-fiebriAzul font-bold text-left px-5 py-3.5 rounded-2xl hover:bg-fiebriGris transition flex items-center gap-4">
-                        <FaHistory size={16} className="text-fiebriVerde"/> Bitácora VAR
+                        <FaHistory size={16} className="text-fiebriVerde"/> Historial
                       </button>
                     )}
-                    <button onClick={() => { navigate('/pedidos'); setSidebarOpen(false); }} className="w-full bg-fiebriAzul text-white font-black text-left px-5 py-4 rounded-2xl flex items-center gap-4 mt-6 hover:shadow-xl transition-all shadow-fiebriAzul/20">
-                      <FaBoxOpen size={20} className="text-fiebriVerde" /> MIS PEDIDOS
-                    </button>
+                    
                   </nav>
 
                   <button onClick={() => { onLogout(); setSidebarOpen(false); }} className="w-full mt-12 px-4 py-4 rounded-2xl font-black text-red-500 hover:bg-red-50 transition-colors uppercase text-[10px] tracking-widest border-2 border-red-50">

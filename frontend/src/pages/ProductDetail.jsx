@@ -167,7 +167,6 @@ export default function ProductDetail({
     if (!selectedSize) return toast.warning("Selecciona tu talla antes de saltar a la cancha.");
     const precioFinal = product.discountPrice || product.price;
     const mensaje = `⚽ ¡HOLA FIEBRITICOS! Me interesa esta joya:\n\n👕 *${product.name}*\n🏷️ Versión: ${product.type}\n📏 Talla: ${selectedSize}\n💰 Precio: ₡${precioFinal.toLocaleString()}\n\n¿Tienen disponibilidad inmediata?`;
-    // 📞 Número actualizado 83068960
     window.open(`https://wa.me/50683068960?text=${encodeURIComponent(mensaje)}`, '_blank');
   };
 
@@ -216,9 +215,17 @@ export default function ProductDetail({
       /> 
 
       <main className="pt-32 pb-24 px-6 max-w-7xl mx-auto">
-        <button onClick={() => navigate(-1)} className="mb-8 flex items-center gap-2 text-fiebriAzul/60 hover:text-fiebriAzul transition font-bold text-xs uppercase tracking-widest group">
-          <FaArrowLeft className="group-hover:-translate-x-1 transition-transform" /> Volver al catálogo
-        </button>
+        
+        {/* 🔙 BOTÓN VOLVER TIPO FIEBRITICO */}
+        <div className="mb-8 flex items-center justify-between">
+            <button 
+                onClick={() => navigate(-1)} 
+                className="flex items-center gap-3 bg-fiebriAzul text-white px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg hover:bg-fiebriVerde hover:text-fiebriAzul transition-all group active:scale-95"
+            >
+                <FaArrowLeft className="group-hover:-translate-x-1 transition-transform" /> 
+                Volver
+            </button>
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
           
@@ -397,7 +404,7 @@ export default function ProductDetail({
                       <FaFutbol className="text-gray-200 text-xs" />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
-                      {isSuperUser && <button onClick={() => setIsEditing(true)} className="py-4 bg-fiebriGris text-fiebriAzul font-black rounded-2xl text-xs uppercase tracking-widest hover:bg-fiebriAzul hover:text-white transition-all flex items-center justify-center gap-3"><FaEdit /> EDITAR</button>}
+                      {isSuperUser && <button onClick={() => setIsEditing(true)} className="py-4 bg-fiebriGris text-fiebriAzul font-black rounded-2xl text-xs uppercase tracking-widest hover:bg-fiebriAzul transition-all flex items-center justify-center gap-3"><FaEdit /> EDITAR</button>}
                       {canDelete && <button onClick={() => setShowConfirmDelete(true)} className="py-4 bg-red-50 text-red-500 font-black rounded-2xl text-xs uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all flex items-center justify-center gap-3"><FaTrash /> ELIMINAR</button>}
                     </div>
                   </div>
