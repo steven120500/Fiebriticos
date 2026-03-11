@@ -38,7 +38,9 @@ app.use(cors({
     'http://localhost:5173',
     'http://127.0.0.1:5173',
     'https://fiebriticos-catalogo.onrender.com',
-    'https://fiebriticos.onrender.com'
+    'https://fiebriticos.onrender.com',
+    'https://fiebriticoscr.com',       // 👈 Tu nuevo dominio oficial
+    'https://www.fiebriticoscr.com'
   ],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'x-user', 'x-super', 'x-roles'],
