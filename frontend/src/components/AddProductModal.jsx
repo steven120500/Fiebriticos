@@ -97,37 +97,54 @@ export default function AddProductModal({ onAdd, onCancel, user }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (loading) return;
+    
     if (!name.trim() || !price || !images.length) {
       return toast.error("Faltan datos: Nombre, Precio y al menos una foto.");
     }
 
     try {
       setLoading(true);
-      const formData = new FormData();
-      formData.append("name", name.trim());
-      formData.append("price", String(price).trim());
-      if (discountPrice) formData.append("discountPrice", String(discountPrice).trim());
-      formData.append("type", type.trim());
-      formData.append("stock", JSON.stringify(stock));
-      formData.append("isNew", isNew ? "true" : "false");
 
-      for (let i = 0; i < images.length; i++) {
-        formData.append("images", images[i].blob, `fiebri-${i}.webp`);
-      }
+      // 🚀 JUGADA MAESTRA: Convertimos los Blobs a Base64 para enviarlos como JSON
+      const base64Images = await Promise.all(
+        images.map(img => new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result);
+          reader.readAsDataURL(img.blob);
+        }))
+      );
+
+      const payload = {
+        name: name.trim(),
+        price: Number(price),
+        discountPrice: discountPrice ? Number(discountPrice) : null,
+        type: type,
+        stock: stock,
+        isNew: isNew,
+        images: base64Images // Enviamos el array de strings base64
+      };
 
       const res = await fetch(`${API_BASE}/api/products`, {
         method: "POST",
-        headers: { "x-user": user?.username || "Admin" },
-        body: formData,
+        headers: { 
+          "Content-Type": "application/json", 
+          "x-user": user?.username || "Admin" 
+        },
+        body: JSON.stringify(payload),
       });
 
-      if (!res.ok) throw new Error();
       const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || "Error al guardar la chema");
+      }
+
       onAdd?.(data);
       onCancel?.();
       toast.success("¡Chema publicada con éxito! ⚽");
     } catch (err) {
-      toast.error("Error al guardar el producto");
+      console.error("Error en submit:", err);
+      toast.error(err.message || "Error al guardar el producto");
     } finally {
       setLoading(false);
     }
@@ -135,7 +152,6 @@ export default function AddProductModal({ onAdd, onCancel, user }) {
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-      {/* Fondo Difuminado */}
       <motion.div 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -144,14 +160,12 @@ export default function AddProductModal({ onAdd, onCancel, user }) {
         className="absolute inset-0 bg-fiebriAzul/60 backdrop-blur-md"
       />
 
-      {/* Contenedor del Modal */}
       <motion.div
         initial={{ scale: 0.9, opacity: 0, y: 20 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
         exit={{ scale: 0.9, opacity: 0, y: 20 }}
         className="relative bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col max-h-[90vh] border-b-8 border-fiebriVerde"
       >
-        {/* Header */}
         <div className="p-8 pb-4 flex justify-between items-start">
           <div>
             <h2 className="text-3xl font-black text-fiebriAzul uppercase italic tracking-tighter leading-none">Nueva</h2>
@@ -163,8 +177,6 @@ export default function AddProductModal({ onAdd, onCancel, user }) {
         </div>
 
         <div className="p-8 pt-0 overflow-y-auto scroll-custom space-y-6">
-          
-          {/* Subida de Fotos */}
           <div className="flex gap-4 justify-center">
             {images.map((img, i) => (
               <div key={i} className="relative group w-32 h-40">
@@ -186,7 +198,6 @@ export default function AddProductModal({ onAdd, onCancel, user }) {
             <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleFiles} />
           </div>
 
-          {/* Inputs Principales */}
           <div className="space-y-4">
             <div className="bg-fiebriGris p-1 rounded-2xl">
               <input
@@ -225,7 +236,7 @@ export default function AddProductModal({ onAdd, onCancel, user }) {
                 onChange={(e) => setType(e.target.value)}
                 className="w-full bg-fiebriAzul text-white px-5 py-4 rounded-2xl font-black uppercase tracking-widest text-xs border-none cursor-pointer"
               >
-                {Object.keys({ ...tallaPorTipo, Balón: ["3", "4", "5"] }).map((t) => (
+                {["Player", "Fan", "Mujer", "Niño", "Retro", "Abrigos", "Nacional", "Balón"].map((t) => (
                   <option key={t} value={t}>{t}</option>
                 ))}
               </select>
@@ -242,7 +253,6 @@ export default function AddProductModal({ onAdd, onCancel, user }) {
             </div>
           </div>
 
-          {/* Inventario */}
           <div className="bg-fiebriGris/50 p-6 rounded-[2rem] border border-gray-100">
             <p className="text-[10px] font-black text-fiebriAzul uppercase mb-4 tracking-[0.3em] text-center border-b border-gray-100 pb-3">Stock por Talla</p>
             <div className="grid grid-cols-4 gap-3">
@@ -262,7 +272,6 @@ export default function AddProductModal({ onAdd, onCancel, user }) {
           </div>
         </div>
 
-        {/* Botón Guardar */}
         <div className="p-8 pt-4">
           <button
             onClick={handleSubmit}
