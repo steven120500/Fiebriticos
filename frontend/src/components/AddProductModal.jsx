@@ -154,7 +154,7 @@ export default function AddProductModal({ onAdd, onCancel, user }) {
         {/* Header */}
         <div className="p-8 pb-4 flex justify-between items-start">
           <div>
-            <h2 className="text-3xl font-black text-fiebriAzul uppercase italic tracking-tighter leading-none">Nueva Joya</h2>
+            <h2 className="text-3xl font-black text-fiebriAzul uppercase italic tracking-tighter leading-none">Nueva</h2>
             <p className="text-gray-400 text-xs font-bold uppercase tracking-widest mt-2">Área de Gestión de Inventario</p>
           </div>
           <button onClick={onCancel} className="bg-fiebriGris p-3 rounded-2xl text-gray-400 hover:text-red-500 transition-colors">

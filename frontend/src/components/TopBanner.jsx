@@ -3,10 +3,10 @@ import { motion, AnimatePresence } from "framer-motion";
 
 function TopBanner() {
   const messages = [
-    "STOCK DE +2500 JOYAS DISPONIBLES",
-    "ENVÍOS EXPRESS A TODO EL PAÍS",
+    
+    "ENVÍOS A TODO EL PAÍS",
     "SOMOS FIEBRITICOS CR",
-    "TU ESTILO JUEGA EN PRIMERA",
+    "LA MEJOR CALIDAD",
   ];
   const [currentIndex, setCurrentIndex] = useState(0);
 

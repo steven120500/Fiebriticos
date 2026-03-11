@@ -38,7 +38,7 @@ export const CartProvider = ({ children }) => {
       if (existingIndex >= 0) {
         const newCart = [...prev];
         newCart[existingIndex].quantity += 1;
-        toast.info(`¡Otra unidad de la joya agregada! ⚽`, { icon: "➕" });
+        toast.info(`¡Unidad  agregada! ⚽`, { icon: "➕" });
         return newCart;
       } else {
         toast.success(`¡Fichaje completado! Al carrito 🛒`, { icon: "✅" });

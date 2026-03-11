@@ -233,7 +233,7 @@ export default function RegisterUserModal({ onClose }) {
               disabled={loading}
               className="boton-fiebri-verde w-full py-4 text-white rounded-2xl font-black text-lg uppercase tracking-tighter italic shadow-xl shadow-fiebriVerde/20 transition-all disabled:opacity-50"
             >
-              {loading ? "Registrando..." : "Confirmar Fichaje"}
+              {loading ? "Registrando..." : "Confirmar"}
             </button>
           </div>
         </form>

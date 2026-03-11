@@ -207,7 +207,7 @@ export default function ProductModal({ product, onClose, onUpdate, canEdit, canD
             {!isEditing ? (
               <>
                 <a 
-                  href={`https://wa.me/50688028216?text=${encodeURIComponent(`⚽ ¡HOLA FIEBRITICOS! Me interesa esta joya:\n\n👕 *${viewProduct?.name}*\n🏷️ Versión: ${viewProduct?.type}\n💰 Precio: ₡${(viewProduct?.discountPrice || viewProduct?.price).toLocaleString()}\n\n📸 Imagen: ${viewProduct?.imageSrc}`)}`}
+                  href={`https://wa.me/50688028216?text=${encodeURIComponent(`⚽ ¡HOLA! Me interesa esta camiseta:\n\n👕 *${viewProduct?.name}*\n🏷️ Versión: ${viewProduct?.type}\n💰 Precio: ₡${(viewProduct?.discountPrice || viewProduct?.price).toLocaleString()}\n\n📸 Imagen: ${viewProduct?.imageSrc}`)}`}
                   target="_blank" rel="noopener noreferrer"
                   className="boton-fiebri-verde w-full py-5 rounded-2xl text-white font-black text-lg flex items-center justify-center gap-3 shadow-xl"
                 >

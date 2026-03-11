@@ -41,7 +41,7 @@ export default function HistoryPage({ user }) {
       setLogs(items);
     } catch (e) {
       console.error(e);
-      toast.error("Error al sincronizar bitácora");
+      toast.error("Error al sincronizar");
     } finally {
       setLoading(false);
     }
@@ -100,8 +100,8 @@ export default function HistoryPage({ user }) {
                 <FaHistory className="text-fiebriVerde text-2xl" />
             </div>
             <div>
-                <h1 className="text-3xl sm:text-5xl font-black italic uppercase tracking-tighter text-fiebriAzul">Bitácora <span className="text-fiebriVerde text-shadow-sm">VAR</span></h1>
-                <p className="text-gray-400 font-bold text-[10px] uppercase tracking-[0.2em] mt-1">Control de movimientos del staff</p>
+                <h1 className="text-3xl sm:text-5xl font-black italic uppercase tracking-tighter text-fiebriAzul">Historial de  <span className="text-fiebriVerde text-shadow-sm">cambios</span></h1>
+                <p className="text-gray-400 font-bold text-[10px] uppercase tracking-[0.2em] mt-1">Control de movimientos</p>
             </div>
           </div>
 

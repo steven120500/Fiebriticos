@@ -88,7 +88,7 @@ export default function UserListModal({ open, onClose }) {
             </div>
           </div>
           <h2 className="text-3xl font-black text-white italic uppercase tracking-tighter">
-            Gestión de <span className="text-fiebriVerde">Staff</span>
+            Gestión de <span className="text-fiebriVerde">Usuario</span>
           </h2>
           <p className="text-white/40 text-[10px] font-bold uppercase tracking-widest mt-2">Control de accesos al sistema</p>
         </div>
@@ -157,9 +157,9 @@ export default function UserListModal({ open, onClose }) {
         <div className="p-6 bg-fiebriGris border-t border-gray-100 flex justify-center">
             <button 
               onClick={onClose}
-              className="px-8 py-3 bg-fiebriAzul text-white rounded-xl font-black text-[10px] uppercase tracking-[0.2em] shadow-lg hover:bg-fiebriAzul/90 transition-all active:scale-95"
+              className="px-8 py-3 bg-fiebriAzul text-blue-600 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] shadow-lg hover:bg-fiebriAzul/90 transition-all active:scale-95"
             >
-              Cerrar Plantilla
+              Cerrar 
             </button>
         </div>
       </motion.div>
