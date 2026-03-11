@@ -34,10 +34,8 @@ import Checkout from "./pages/Checkout.jsx";
 import OrdersPage from "./pages/OrdersPage.jsx"; 
 import HistoryPage from "./pages/HistoryPage.jsx";
 
-// 🚀 JUGADA INTELIGENTE: Detecta si es local o producción
-const API_BASE = window.location.hostname === "localhost" 
-  ? "http://localhost:5001" 
-  : "https://fiebriticos.onrender.com"; 
+// 👇 JUGADA CORREGIDA: Ahora Vite lee tu .env (el que dice localhost:5001)
+const API_BASE = import.meta.env.VITE_API_URL || "https://fiebriticos.onrender.com"; 
 
 function buildPages(page, pages) {
   const out = new Set([1, pages, page, page - 1, page - 2, page + 1, page + 2]);
