@@ -57,14 +57,14 @@ export default function ProductCard({ product, onClick, canEdit }) {
           </div>
         )}
 
-        {/* Etiqueta Nuevo - Escalada para móvil */}
+        {/* Etiqueta Nuevo */}
         {!isOutOfStock && isNew && (
           <div className="sticker-new z-20 scale-75 origin-top-left sm:scale-100">
             <span>Nuevo</span>
           </div>
         )}
 
-        {/* Etiqueta Oferta - Ajustada para móvil */}
+        {/* Etiqueta Oferta */}
         {!isOutOfStock && hasDiscount && (
           <div className="absolute top-2 sm:top-4 right-0 sm:-right-0 z-20 scale-75 origin-top-right sm:scale-100">
             <span className="etiqueta-oferta-fiebri flex items-center gap-1 sm:gap-1.5 shadow-xl">
@@ -96,11 +96,10 @@ export default function ProductCard({ product, onClick, canEdit }) {
           </div>
         )}
 
-        {/* Ajuste de padding para móvil */}
         <div className="p-3 sm:p-5 flex flex-col justify-between flex-grow">
           
-          {/* Nombre más pequeño en móvil */}
-          <h3 className="text-xs sm:text-sm font-black text-fiebriAzul uppercase italic tracking-tighter leading-tight line-clamp-2 min-h-[2.8em] group-hover:text-fiebriVerde transition-colors">
+          {/* 🚀 EL ARREGLO ESTÁ AQUÍ: line-clamp-3 y min-h-[4em] */}
+          <h3 className="text-xs sm:text-sm font-black text-fiebriAzul uppercase italic tracking-tighter leading-tight line-clamp-3 min-h-[4em] sm:line-clamp-2 sm:min-h-[2.8em] group-hover:text-fiebriVerde transition-colors">
             {product.name}
           </h3>
 
@@ -115,7 +114,7 @@ export default function ProductCard({ product, onClick, canEdit }) {
                 <span className="text-sm sm:text-xl font-black text-fiebriAzul italic">₡{Number(product.price).toLocaleString("de-DE")}</span>
               )}
             </div>
-            {/* Ícono de pelota más pequeño en móvil */}
+            
             <div className="h-6 w-6 sm:h-8 sm:w-8 rounded-full bg-fiebriGris flex items-center justify-center group-hover:bg-fiebriVerde transition-colors">
               <FaFutbol className="text-gray-300 group-hover:text-fiebriAzul text-[10px] sm:text-sm transition-colors" />
             </div>
