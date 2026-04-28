@@ -4,7 +4,7 @@ import { toast } from 'react-toastify';
 import { 
   FaWhatsapp, FaTimes, FaChevronLeft, FaChevronRight, FaEdit, 
   FaTrash, FaShoppingCart, FaArrowLeft, FaExclamationTriangle, 
-  FaFutbol, FaTag, FaCheckCircle, FaPlus, FaImage
+  FaFutbol, FaTag, FaCheckCircle, FaPlus, FaImage, FaGlobeAmericas
 } from 'react-icons/fa';
 import { motion, AnimatePresence } from "framer-motion";
 import { useCart } from '../context/CartContext';
@@ -56,6 +56,7 @@ export default function ProductDetail({
   const [editedType, setEditedType] = useState('Player');
   const [editedStock, setEditedStock] = useState({});
   const [editedIsNew, setEditedIsNew] = useState(false);
+  const [editedIsMundial, setEditedIsMundial] = useState(false); // 🌎 NUEVO ESTADO MUNDIALISTA
   const [localImages, setLocalImages] = useState([]);
 
   const isSuperUser = user?.isSuperUser || user?.roles?.includes("edit");
@@ -88,6 +89,7 @@ export default function ProductDetail({
     setEditedType(data.type || 'Player');
     setEditedStock({ ...(data.stock || {}) });
     setEditedIsNew(Boolean(data.isNew));
+    setEditedIsMundial(Boolean(data.isMundial)); // 🌎 Sincroniza el estado mundialista
     
     let imgs = [];
     if (Array.isArray(data.images) && data.images.length > 0) {
@@ -111,6 +113,7 @@ export default function ProductDetail({
         // Filtramos para no enviar el placeholder a la BD
         images: localImages.map(i => i.src).filter(src => src !== PLACEHOLDER_IMG), 
         isNew: editedIsNew,
+        isMundial: editedIsMundial, // 🌎 Se envía el nuevo dato al backend
       };
 
       const res = await fetch(`${API_BASE}/api/products/${id}`, {
@@ -125,7 +128,6 @@ export default function ProductDetail({
       const data = await res.json();
       
       if (!res.ok) {
-        // 🚀 EL LOG MAESTRO: Aquí verás por qué falló el local
         console.log("❌ ERROR DEL BACKEND:", data); 
         throw new Error(data.message || "Error al actualizar");
       }
@@ -317,13 +319,23 @@ export default function ProductDetail({
                   <div className="space-y-4">
                       <div className="grid grid-cols-1 gap-4">
                           <input type="text" value={editedName} onChange={e => setEditedName(e.target.value)} className="w-full bg-fiebriGris border-none rounded-2xl px-5 py-3 font-bold text-fiebriAzul" placeholder="Nombre de la chema" />
-                          <div className="grid grid-cols-2 gap-4">
-                              <select value={editedType} onChange={e => setEditedType(e.target.value)} className="w-full bg-fiebriGris border-none rounded-2xl px-5 py-3 font-bold text-fiebriAzul">
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                              <select value={editedType} onChange={e => setEditedType(e.target.value)} className="w-full bg-fiebriGris border-none rounded-2xl px-5 py-3 font-bold text-fiebriAzul text-xs">
                                   {['Player','Fan','Mujer','Nacional','Abrigos','Retro','Niño','Balón'].map(t => <option key={t}>{t}</option>)}
                               </select>
-                              <label className="flex items-center gap-3 px-5 py-3 bg-fiebriGris rounded-2xl cursor-pointer">
-                                  <input type="checkbox" checked={editedIsNew} onChange={e => setEditedIsNew(e.target.checked)} className="rounded border-none text-fiebriVerde" />
-                                  <span className="text-[10px] font-black uppercase text-fiebriAzul">¿Nuevo?</span>
+                              
+                              <label className="flex items-center justify-center gap-2 px-3 py-3 bg-fiebriGris rounded-2xl cursor-pointer hover:bg-fiebriVerde/10 transition-colors">
+                                  <input type="checkbox" checked={editedIsNew} onChange={e => setEditedIsNew(e.target.checked)} className="rounded border-none text-fiebriVerde w-4 h-4" />
+                                  <span className="text-[9px] font-black uppercase text-fiebriAzul tracking-widest leading-none">Nuevo</span>
+                              </label>
+
+                              {/* 🌎 NUEVO CHECKBOX MUNDIALISTA EN EDICIÓN */}
+                              <label className={`flex items-center justify-center gap-2 px-2 py-3 rounded-2xl cursor-pointer transition-all border-2 ${editedIsMundial ? 'bg-blue-50 border-blue-500 shadow-sm' : 'bg-fiebriGris border-transparent hover:bg-blue-50'}`}>
+                                  <input type="checkbox" checked={editedIsMundial} onChange={e => setEditedIsMundial(e.target.checked)} className="rounded border-none text-blue-600 w-4 h-4" />
+                                  <div className="flex flex-col items-center">
+                                     <FaGlobeAmericas className={`text-xs ${editedIsMundial ? 'text-blue-600' : 'text-gray-400'}`} />
+                                     <span className={`text-[7px] mt-1 font-black uppercase tracking-widest leading-none ${editedIsMundial ? 'text-blue-700' : 'text-gray-500'}`}>Mundial</span>
+                                  </div>
                               </label>
                           </div>
                       </div>
@@ -376,6 +388,7 @@ export default function ProductDetail({
                   <div className="flex flex-wrap items-center gap-2 mb-4">
                       <span className="px-3 py-1 bg-fiebriAzul text-white font-black text-[10px] uppercase rounded-full tracking-[0.2em]">{product.type}</span>
                       {product.isNew && <span className="px-3 py-1 bg-fiebriVerde text-fiebriAzul font-black text-[10px] uppercase rounded-full tracking-[0.2em] shadow-sm">NUEVO</span>}
+                      {product.isMundial && <span className="px-3 py-1 bg-blue-100 border border-blue-200 text-blue-700 font-black text-[10px] uppercase rounded-full tracking-[0.2em] shadow-sm flex items-center gap-1"><FaGlobeAmericas /> MUNDIALISTA</span>}
                       {product.discountPrice > 0 && <span className="px-3 py-1 bg-red-500 text-white font-black text-[10px] uppercase rounded-full tracking-[0.2em] flex items-center gap-1"><FaTag size={8}/> OFERTA</span>}
                   </div>
                   
@@ -441,14 +454,14 @@ export default function ProductDetail({
                 </div>
 
                 <div className="flex flex-col gap-4">
-  <button 
-    onClick={handleBuyWhatsApp} 
-    className="boton-fiebri-verde w-full py-5 rounded-2xl text-white font-black text-xl flex items-center justify-center gap-4 pl-4 shadow-xl active:scale-95"
-  >
-    <FaWhatsapp size={28} /> 
-    <span>COMPRAR POR WHATSAPP</span>
-  </button>
-</div>
+                  <button 
+                    onClick={handleBuyWhatsApp} 
+                    className="boton-fiebri-verde w-full py-5 rounded-2xl text-white font-black text-xl flex items-center justify-center gap-4 pl-4 shadow-xl active:scale-95"
+                  >
+                    <FaWhatsapp size={28} /> 
+                    <span>COMPRAR POR WHATSAPP</span>
+                  </button>
+                </div>
 
                 {(isSuperUser || canDelete) && (
                   <div className="mt-16 pt-8 border-t-2 border-fiebriGris">

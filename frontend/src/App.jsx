@@ -97,7 +97,8 @@ export default function App() {
         page: String(p),
         limit: String(limit),
         ...(q ? { q } : {}),
-        ...(tp ? { type: tp } : {}),
+        // 🌎 JUGADA MUNDIALISTA: Si el filtro es "Mundialista", enviamos un parámetro especial
+        ...(tp === "Mundialista" ? { isMundial: "true" } : tp ? { type: tp } : {}),
         ...(szs ? { sizes: szs } : {}),
       });
 

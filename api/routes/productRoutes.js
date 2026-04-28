@@ -59,11 +59,15 @@ router.get('/', async (req, res) => {
     const type = (req.query.type || '').trim();
     const sizes = (req.query.sizes || '').trim();
     const mode = (req.query.mode || '').trim();
+    const isMundial = req.query.isMundial === 'true'; // 🌎 JUGADA MUNDIALISTA: Detectamos el parámetro
 
     const find = {};
     if (q) find.name = { $regex: q, $options: 'i' };
 
-    if (type === 'Ofertas') {
+    // 🌎 Filtro exclusivo para Mundialistas
+    if (isMundial) {
+        find.isMundial = true;
+    } else if (type === 'Ofertas') {
       find.discountPrice = { $ne: null, $gt: 0 };
     } else if (mode === 'disponibles') {
       find.$and = [
@@ -81,7 +85,8 @@ router.get('/', async (req, res) => {
       }
     }
 
-    const projection = 'name price discountPrice type imageSrc images stock bodega createdAt isNew';
+    // 🌎 Aseguramos devolver "isMundial" en el listado
+    const projection = 'name price discountPrice type imageSrc images stock bodega createdAt isNew isMundial';
 
     const [items, total] = await Promise.all([
       Product.find(find).select(projection).sort({ createdAt: -1 }).skip((page - 1) * limit).limit(limit).lean(),
@@ -144,6 +149,7 @@ router.post('/', upload.any(), async (req, res) => {
     } catch { stock = {}; }
     
     const isNew = req.body.isNew === 'true' || req.body.isNew === true;
+    const isMundial = req.body.isMundial === 'true' || req.body.isMundial === true; // 🌎 NUEVO
 
     const product = await Product.create({
       name: String(req.body.name || '').trim(),
@@ -154,6 +160,7 @@ router.post('/', upload.any(), async (req, res) => {
       imageSrc,
       images,
       isNew,
+      isMundial, // 🌎 NUEVO
     });
 
     // Registro de Historial
@@ -188,7 +195,8 @@ router.put('/:id', async (req, res) => {
       price: Number(req.body.price) || prev.price,
       discountPrice: req.body.discountPrice !== undefined ? Number(req.body.discountPrice) : prev.discountPrice,
       stock: nextStock,
-      isNew: req.body.isNew !== undefined ? req.body.isNew : prev.isNew
+      isNew: req.body.isNew !== undefined ? req.body.isNew : prev.isNew,
+      isMundial: req.body.isMundial !== undefined ? req.body.isMundial : prev.isMundial // 🌎 NUEVO
     };
 
     // Procesar imágenes nuevas si vienen en Base64

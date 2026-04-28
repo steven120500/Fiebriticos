@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaFutbol } from "react-icons/fa";
+import MundialBanner from "./MundialBanner"; // 👈 Importamos el nuevo componente mundialista
 
 export default function Bienvenido({ setFilterType }) {
   const [activeIndex, setActiveIndex] = useState(0);
@@ -60,84 +61,95 @@ export default function Bienvenido({ setFilterType }) {
         <FaFutbol />
       </motion.div>
 
-      {/* 🏟️ Contenedor Principal */}
-      <div className="max-w-7xl mx-auto relative z-10 w-full flex flex-col lg:flex-row items-center justify-between gap-12 mt-10">
+      {/* 📦 Envoltorio General para mantener la estructura intacta */}
+      <div className="w-full relative z-10 flex flex-col mt-10">
         
-        {/* 🔹 MITAD IZQUIERDA: Textos */}
-        <motion.div
-          initial="hidden"
-          animate="show"
-          variants={{ show: { transition: { staggerChildren: 0.15 } } }}
-          className="lg:w-1/2 flex flex-col items-center lg:items-start text-center lg:text-left"
-        >
-          <motion.h1 variants={itemVariants} className="text-6xl md:text-8xl lg:text-[7rem] font-black text-white italic uppercase leading-[0.85] tracking-tighter mb-6 drop-shadow-2xl">
-            FIEBRI<br />
-            <span className="text-fiebriVerde">TICOS</span>
-          </motion.h1>
+        {/* 🏟️ Contenedor Principal (El original) */}
+        <div className="max-w-7xl mx-auto w-full flex flex-col lg:flex-row items-center justify-between gap-12">
           
-          <motion.p 
-            variants={itemVariants} 
-            className="hidden md:block text-white/80 text-lg md:text-xl font-medium max-w-lg mb-10 leading-relaxed"
+          {/* 🔹 MITAD IZQUIERDA: Textos */}
+          <motion.div
+            initial="hidden"
+            animate="show"
+            variants={{ show: { transition: { staggerChildren: 0.15 } } }}
+            className="lg:w-1/2 flex flex-col items-center lg:items-start text-center lg:text-left"
           >
-            Las mejores chemas del país con la calidad que solo un verdadero fiebre reconoce.
-          </motion.p>
-        </motion.div>
+            <motion.h1 variants={itemVariants} className="text-6xl md:text-8xl lg:text-[7rem] font-black text-white italic uppercase leading-[0.85] tracking-tighter mb-6 drop-shadow-2xl">
+              FIEBRI<br />
+              <span className="text-fiebriVerde">TICOS</span>
+            </motion.h1>
+            
+            <motion.p 
+              variants={itemVariants} 
+              className="hidden md:block text-white/80 text-lg md:text-xl font-medium max-w-lg mb-10 leading-relaxed"
+            >
+              Las mejores chemas del país con la calidad que solo un verdadero fiebre reconoce.
+            </motion.p>
+          </motion.div>
 
-        {/* 🔹 MITAD DERECHA: Animación de las 3 Chemas con botones dinámicos */}
-        <div className="lg:w-5/12 w-full flex flex-col gap-4 relative">
-          {chemas.map((chema, index) => {
-            const isActive = index === activeIndex;
+          {/* 🔹 MITAD DERECHA: Animación de las 3 Chemas con botones dinámicos */}
+          <div className="lg:w-5/12 w-full flex flex-col gap-4 relative">
+            {chemas.map((chema, index) => {
+              const isActive = index === activeIndex;
 
-            return (
-              <motion.div
-                key={chema.id}
-                layout
-                onClick={() => setActiveIndex(index)}
-                className={`relative cursor-pointer flex items-center p-4 rounded-[2rem] transition-all duration-500 border-2 overflow-hidden ${
-                  isActive
-                    ? "bg-fiebriVerde border-fiebriVerde shadow-[0_0_40px_rgba(34,197,94,0.3)] scale-105 z-10"
-                    : "bg-white/5 border-white/10 backdrop-blur-md scale-95 opacity-60 hover:opacity-100 z-0"
-                }`}
-              >
-                {/* Imagen de la chema */}
-                <div className="w-24 h-24 sm:w-32 sm:h-32 shrink-0 relative flex justify-center items-center">
-                  <img 
-                    src={chema.img} 
-                    alt={chema.name} 
-                    className={`object-contain drop-shadow-2xl transition-all duration-500 ${isActive ? "scale-110" : "scale-90 grayscale-[30%]"}`} 
-                  />
-                </div>
+              return (
+                <motion.div
+                  key={chema.id}
+                  layout
+                  onClick={() => setActiveIndex(index)}
+                  className={`relative cursor-pointer flex items-center p-4 rounded-[2rem] transition-all duration-500 border-2 overflow-hidden ${
+                    isActive
+                      ? "bg-fiebriVerde border-fiebriVerde shadow-[0_0_40px_rgba(34,197,94,0.3)] scale-105 z-10"
+                      : "bg-white/5 border-white/10 backdrop-blur-md scale-95 opacity-60 hover:opacity-100 z-0"
+                  }`}
+                >
+                  {/* Imagen de la chema */}
+                  <div className="w-24 h-24 sm:w-32 sm:h-32 shrink-0 relative flex justify-center items-center">
+                    <img 
+                      src={chema.img} 
+                      alt={chema.name} 
+                      className={`object-contain drop-shadow-2xl transition-all duration-500 ${isActive ? "scale-110" : "scale-90 grayscale-[30%]"}`} 
+                    />
+                  </div>
 
-                {/* Textos y Botón Interno Dinámico */}
-                <div className="ml-2 sm:ml-6 flex-1">
-                  <h3 className={`text-xl sm:text-2xl font-black uppercase italic tracking-tighter transition-colors ${isActive ? "text-fiebriAzul" : "text-white"}`}>
-                    {chema.name}
-                  </h3>
-                  <p className={`text-[10px] sm:text-xs font-bold uppercase tracking-widest transition-colors ${isActive ? "text-fiebriAzul/70" : "text-white/50"}`}>
-                    {chema.desc}
-                  </p>
-                  
-                  <AnimatePresence>
-                    {isActive && (
-                      <motion.button
-                        initial={{ opacity: 0, height: 0, marginTop: 0 }}
-                        animate={{ opacity: 1, height: "auto", marginTop: 12 }}
-                        exit={{ opacity: 0, height: 0, marginTop: 0 }}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleFiltrar(chema.id);
-                        }}
-                        className="bg-white text-blue-900 text-[10px] sm:text-xs font-black uppercase tracking-widest px-5 py-2.5 rounded-xl flex items-center gap-2 shadow-lg hover:scale-105 active:scale-95 transition-transform"
-                      >
-                         Ver {chema.id} {/* 👈 Aquí el botón cambia según la ID (Player, Fan o Retro) */}
-                      </motion.button>
-                    )}
-                  </AnimatePresence>
-                </div>
-              </motion.div>
-            );
-          })}
+                  {/* Textos y Botón Interno Dinámico */}
+                  <div className="ml-2 sm:ml-6 flex-1">
+                    <h3 className={`text-xl sm:text-2xl font-black uppercase italic tracking-tighter transition-colors ${isActive ? "text-fiebriAzul" : "text-white"}`}>
+                      {chema.name}
+                    </h3>
+                    <p className={`text-[10px] sm:text-xs font-bold uppercase tracking-widest transition-colors ${isActive ? "text-fiebriAzul/70" : "text-white/50"}`}>
+                      {chema.desc}
+                    </p>
+                    
+                    <AnimatePresence>
+                      {isActive && (
+                        <motion.button
+                          initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                          animate={{ opacity: 1, height: "auto", marginTop: 12 }}
+                          exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleFiltrar(chema.id);
+                          }}
+                          className="bg-white text-blue-900 text-[10px] sm:text-xs font-black uppercase tracking-widest px-5 py-2.5 rounded-xl flex items-center gap-2 shadow-lg hover:scale-105 active:scale-95 transition-transform"
+                        >
+                          Ver {chema.id} {/* 👈 Aquí el botón cambia según la ID (Player, Fan o Retro) */}
+                        </motion.button>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
         </div>
+
+        {/* 🌎 NUEVO: BANNER MUNDIALISTA 2026 */}
+        <div className="max-w-7xl mx-auto w-full mt-10">
+          {/* Asumimos que la categoría de los países es "Nacional" */}
+          <MundialBanner onMundialClick={() => handleFiltrar("Mundialista")} />
+        </div>
+
       </div>
     </section>
   );

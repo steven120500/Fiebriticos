@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { FaTimes, FaCloudUploadAlt } from "react-icons/fa";
+import { FaTimes, FaCloudUploadAlt, FaGlobeAmericas } from "react-icons/fa";
 import { toast } from "react-toastify";
 import { motion, AnimatePresence } from "framer-motion";
 import "react-toastify/dist/ReactToastify.css";
@@ -48,6 +48,7 @@ export default function AddProductModal({ onAdd, onCancel, user }) {
   const [discountPrice, setDiscountPrice] = useState("");
   const [type, setType] = useState("Player");
   const [isNew, setIsNew] = useState(false);
+  const [isMundial, setIsMundial] = useState(false); // 🌎 NUEVO ESTADO MUNDIALISTA
   const [stock, setStock] = useState({});
   const [loading, setLoading] = useState(false);
 
@@ -105,7 +106,6 @@ export default function AddProductModal({ onAdd, onCancel, user }) {
     try {
       setLoading(true);
 
-      // 🚀 JUGADA MAESTRA: Convertimos los Blobs a Base64 para enviarlos como JSON
       const base64Images = await Promise.all(
         images.map(img => new Promise((resolve) => {
           const reader = new FileReader();
@@ -121,7 +121,8 @@ export default function AddProductModal({ onAdd, onCancel, user }) {
         type: type,
         stock: stock,
         isNew: isNew,
-        images: base64Images // Enviamos el array de strings base64
+        isMundial: isMundial, // 🌎 SE ENVÍA EL DATO MUNDIALISTA AL BACKEND
+        images: base64Images
       };
 
       const res = await fetch(`${API_BASE}/api/products`, {
@@ -230,25 +231,39 @@ export default function AddProductModal({ onAdd, onCancel, user }) {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <select
                 value={type}
                 onChange={(e) => setType(e.target.value)}
-                className="w-full bg-fiebriAzul text-white px-5 py-4 rounded-2xl font-black uppercase tracking-widest text-xs border-none cursor-pointer"
+                className="w-full bg-fiebriAzul text-white px-3 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] sm:text-xs border-none cursor-pointer"
               >
                 {["Player", "Fan", "Mujer", "Niño", "Retro", "Abrigos", "Nacional", "Balón"].map((t) => (
                   <option key={t} value={t}>{t}</option>
                 ))}
               </select>
 
-              <label className="flex items-center justify-center gap-3 bg-fiebriGris rounded-2xl cursor-pointer hover:bg-fiebriVerde/10 transition-colors">
+              <label className="flex items-center justify-center gap-2 bg-fiebriGris rounded-2xl cursor-pointer hover:bg-fiebriVerde/10 transition-colors px-2 py-4">
                 <input
                   type="checkbox"
                   checked={isNew}
                   onChange={(e) => setIsNew(e.target.checked)}
-                  className="w-5 h-5 text-fiebriVerde rounded border-none focus:ring-0"
+                  className="w-4 h-4 text-fiebriVerde rounded border-none focus:ring-0"
                 />
-                <span className="text-[10px] font-black uppercase text-fiebriAzul tracking-widest">¿Nuevo?</span>
+                <span className="text-[9px] font-black uppercase text-fiebriAzul tracking-widest leading-none">Nuevo</span>
+              </label>
+
+              {/* 🌎 NUEVO CHECKBOX: MUNDIALISTA */}
+              <label className={`flex items-center justify-center gap-2 rounded-2xl cursor-pointer transition-all px-2 py-4 border-2 ${isMundial ? 'bg-blue-50 border-blue-500 shadow-md' : 'bg-fiebriGris border-transparent hover:bg-blue-50'}`}>
+                <input
+                  type="checkbox"
+                  checked={isMundial}
+                  onChange={(e) => setIsMundial(e.target.checked)}
+                  className="w-4 h-4 text-blue-600 rounded border-none focus:ring-0"
+                />
+                <div className="flex flex-col items-center">
+                   <FaGlobeAmericas className={`text-sm ${isMundial ? 'text-blue-600' : 'text-gray-400'}`} />
+                   <span className={`text-[8px] mt-1 font-black uppercase tracking-widest leading-none ${isMundial ? 'text-blue-700' : 'text-gray-500'}`}>Mundial</span>
+                </div>
               </label>
             </div>
           </div>
