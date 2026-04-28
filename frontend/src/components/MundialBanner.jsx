@@ -77,7 +77,7 @@ export default function MundialBanner({ onMundialClick }) {
             </span>
           </h2>
           
-          <p className="text-[10px] sm:text-xs font-bold mt-2 text-gray-100 max-w-[90%] sm:max-w-[70%] leading-tight uppercase tracking-widest hidden sm:block drop-shadow-md">
+          <p className="text-[10px] sm:text-xs font-bold mt-2 text-black max-w-[90%] sm:max-w-[70%] leading-tight uppercase tracking-widest hidden sm:block drop-shadow-md">
             Tres naciones, un ícono. Equípate con las selecciones. ¡Que empiece la fiesta!
           </p>
 
