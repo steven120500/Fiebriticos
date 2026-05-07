@@ -66,7 +66,7 @@ export default function MundialBanner({ onMundialClick }) {
           <div className="flex items-center gap-2 mb-1 bg-white/30 w-max px-2 py-0.5 rounded-full backdrop-blur-sm sm:bg-transparent sm:backdrop-blur-none">
             <FaGlobeAmericas className="animate-spin-slow text-base sm:text-xl text-fiebriAzul" />
             <span className="text-[9px] sm:text-[11px] font-black uppercase tracking-[0.3em] text-gray-700 sm:text-gray-500">
-              Rumbo al 2026
+             Mundial 2026
             </span>
           </div>
           
@@ -78,7 +78,7 @@ export default function MundialBanner({ onMundialClick }) {
           </h2>
           
           <p className="text-[10px] sm:text-xs font-bold mt-2 text-black max-w-[90%] sm:max-w-[70%] leading-tight uppercase tracking-widest hidden sm:block drop-shadow-md">
-            Tres naciones, un ícono. Equípate con las selecciones. ¡Que empiece la fiesta!
+            Equípate con las selecciones. ¡Que empiece la fiesta!
           </p>
 
           <div className="mt-4 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-fiebriAzul bg-white/95 shadow-lg w-max px-5 py-2.5 rounded-xl backdrop-blur-sm sm:hidden z-30 active:scale-95 transition-transform">
