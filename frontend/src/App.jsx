@@ -171,16 +171,30 @@ export default function App() {
 
               <div className="h-28 sm:h-32" />
               
-              {/* 🚀 JUGADA MAESTRA: Ahora le pasamos setFilterType a Bienvenido */}
-              <Bienvenido setFilterType={setFilterType} />
+              {/* 🚀 JUGADA MAESTRA: Forzamos la página 1 cuando se usan los filtros */}
+              <Bienvenido 
+                setFilterType={(val) => { 
+                  setFilterType(val); 
+                  setPage(1); 
+                }} 
+              />
 
               <FilterBar 
                 searchTerm={searchTerm} 
-                setSearchTerm={setSearchTerm} 
+                setSearchTerm={(val) => { 
+                  setSearchTerm(val); 
+                  setPage(1); 
+                }} 
                 filterType={filterType} 
-                setFilterType={setFilterType} 
+                setFilterType={(val) => { 
+                  setFilterType(val); 
+                  setPage(1); 
+                }} 
                 filterSizes={filterSizes} 
-                setFilterSizes={setFilterSizes} 
+                setFilterSizes={(val) => { 
+                  setFilterSizes(val); 
+                  setPage(1); 
+                }} 
               />
 
               {canAdd && (
