@@ -21,7 +21,7 @@ export default function FilterBar({
   // 🔹 Tallas (Niños y Adultos)
   const sizes = [
     "18", "20", "22", "24", "26", "28", // Niños
-    "S", "M", "L", "XL", "2XL", "3XL", "4XL", // Adultos
+    "S", "M", "L", "XL", "XXL", "3XL", "4XL", // Adultos
   ];
 
   // Cerrar al hacer clic afuera
