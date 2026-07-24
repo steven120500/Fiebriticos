@@ -20,6 +20,7 @@ import UserListModal from "./components/UserListModal";
 import Medidas from "./components/Medidas";
 import Bienvenido from "./components/Bienvenido";
 import FilterBar from "./components/FilterBar";
+import WelcomeSplash from "./components/WelcomeSplash";
 
 // --- UTILS & ASSETS ---
 import { FaPlus, FaChevronLeft, FaChevronRight } from "react-icons/fa";
@@ -134,6 +135,7 @@ export default function App() {
   return (
     <CartProvider>
       <Router>
+      <WelcomeSplash />
         <CartDrawer />
         <Routes>
           <Route path="/reset-password/:token" element={<ResetPassword />} />

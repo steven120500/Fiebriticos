@@ -144,11 +144,11 @@ export default function Bienvenido({ setFilterType }) {
           </div>
         </div>
 
-        {/* 🌎 NUEVO: BANNER MUNDIALISTA 2026 */}
-        <div className="max-w-7xl mx-auto w-full mt-10">
-          {/* Asumimos que la categoría de los países es "Nacional" */}
-          <MundialBanner onMundialClick={() => handleFiltrar("Mundialista")} />
-        </div>
+       {/* 🌎 NUEVO: BANNER MUNDIALISTA 2026 - QUITADO TEMPORALMENTE
+      <div className="max-w-7xl mx-auto w-full mt-10">
+        <MundialBanner onMundialClick={() => handleFiltrar("Mundialista")} />
+      </div>
+      */}
 
       </div>
     </section>
