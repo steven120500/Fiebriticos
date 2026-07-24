@@ -52,6 +52,17 @@ export default function App() {
   const [filterType, setFilterType] = useState(""); // 👈 El estado que manda
   const [filterSizes, setFilterSizes] = useState([]);
 
+  // 🚀 JUGADA TÁCTICA: Solo mostramos el splash si el navegador indica que aún no lo ha visto en esta sesión
+  const [showSplash, setShowSplash] = useState(() => {
+    const hasSeen = sessionStorage.getItem("fiebri_splash_seen");
+    return !hasSeen;
+  });
+
+  const handleFinishSplash = () => {
+    setShowSplash(false);
+    sessionStorage.setItem("fiebri_splash_seen", "true");
+  };
+
   // Estados de Modales
   const [showAddModal, setShowAddModal] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
@@ -135,7 +146,9 @@ export default function App() {
   return (
     <CartProvider>
       <Router>
-      <WelcomeSplash />
+        {/* 🚀 Solo aparece una vez al abrir el sitio */}
+        {showSplash && <WelcomeSplash onFinish={handleFinishSplash} />}
+
         <CartDrawer />
         <Routes>
           <Route path="/reset-password/:token" element={<ResetPassword />} />

@@ -13,9 +13,9 @@ export default function FilterBar({
   const [openDropdown, setOpenDropdown] = useState(null);
   const dropdownRef = useRef(null);
 
-  // 🔹 Categorías del catálogo
+  // 🔹 Categorías del catálogo (¡Incluyendo el filtro Mundialista!)
   const categories = [
-    "Todos", "Player", "Fan", "Mujer", "Niño", "Retro", "Abrigos", "Nacional", "Balón", "Ofertas"
+    "Todos", "Player", "Fan", "Mujer", "Niño", "Retro", "Abrigos", "Nacional", "Balón", "Mundialista", "Ofertas"
   ];
   
   // 🔹 Tallas (Niños y Adultos)
