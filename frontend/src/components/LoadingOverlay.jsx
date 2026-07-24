@@ -16,9 +16,7 @@ export default function LoadingOverlay() {
         </div>
 
         <div className="space-y-2">
-          <h3 className="text-2xl font-black text-fiebriAzul italic uppercase tracking-tighter">
-            Saltando a la cancha
-          </h3>
+          
           <p className="text-fiebriVerde font-black text-[10px] uppercase tracking-[0.3em] animate-pulse">
             Cargando...
           </p>
