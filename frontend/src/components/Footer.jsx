@@ -37,7 +37,7 @@ export default function Footer() {
               rel="noopener noreferrer"
               className="text-fiebriVerde hover:text-white transition-colors border-b border-fiebriVerde pb-0.5"
             >
-              STEVEN CORRALES ALFARO
+              Beesoft
             </a>
           </p>
         </div>
