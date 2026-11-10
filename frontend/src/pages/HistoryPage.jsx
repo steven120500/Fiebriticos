@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
-import { FaHistory, FaTrash, FaUser, FaCalendarAlt, FaArrowLeft, FaSearch, FaFutbol } from "react-icons/fa";
+import { FaHistory, FaTrash, FaUser, FaCalendarAlt, FaArrowLeft, FaArrowRight, FaSearch, FaFutbol } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import Footer from "../components/Footer";
 import { authHeaders } from "../auth";
@@ -193,13 +193,37 @@ export default function HistoryPage({ user }) {
                   </div>
                   
                   {/* 👇 EL TEXTO DEL HISTORIAL SALE DIRECTO, SIN BOTONES OCULTOS 👇 */}
-                  {log.details && (
+                  {Array.isArray(log.details) && log.details.length > 0 ? (
+                    <div className="mt-2 bg-fiebriGris p-4 sm:p-5 rounded-2xl border border-gray-100">
+                      <p className="text-[9px] text-gray-400 uppercase font-black mb-3 tracking-widest">
+                        {log.action === "Crear" ? "Datos iniciales" : log.action === "Eliminar" ? "Datos al eliminar" : `Cambios detectados (${log.details.length})`}
+                      </p>
+                      <ul className="flex flex-col gap-2">
+                        {log.details.map((c, i) => (
+                          <li key={i} className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 bg-white rounded-xl px-4 py-2.5">
+                            <span className="sm:w-40 shrink-0 text-[10px] font-black uppercase tracking-wider text-fiebriAzul">
+                              {c.campo}
+                            </span>
+                            <span className="flex flex-wrap items-center gap-2 text-sm font-bold">
+                              {c.antes !== "" && (
+                                <span className={log.action === "Eliminar" ? "text-gray-600" : "text-red-500/80 line-through decoration-2"}>
+                                  {c.antes}
+                                </span>
+                              )}
+                              {c.antes !== "" && c.despues !== "" && <FaArrowRight className="text-gray-300 text-xs" />}
+                              {c.despues !== "" && <span className="text-fiebriVerde">{c.despues}</span>}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : log.details ? (
                     <div className="mt-2 bg-fiebriGris p-5 rounded-2xl border border-gray-100 overflow-hidden">
                       <p className="text-[12px] sm:text-sm text-fiebriAzul/80 font-bold leading-relaxed">
-                        {typeof log.details === "string" ? log.details : JSON.stringify(log.details, null, 2)}
+                        {typeof log.details === "string" ? log.details : JSON.stringify(log.details)}
                       </p>
                     </div>
-                  )}
+                  ) : null}
                 </div>
               </div>
             ))}

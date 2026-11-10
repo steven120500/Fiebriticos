@@ -57,6 +57,49 @@ function parsePrice(v) {
   return Number.isFinite(n) && n >= 0 ? n : NaN;
 }
 
+/* ---------- Detección de cambios para el historial ---------- */
+const yesNo = (v) => (v ? 'Sí' : 'No');
+const money = (v) => (v == null || v === 0 ? 'Sin oferta' : `₡${Number(v).toLocaleString('es-CR')}`);
+
+/**
+ * Compara el producto antes y después de editar.
+ * Devuelve [{ campo, antes, despues }] solo con lo que cambió.
+ */
+function diffProduct(prev, next) {
+  const out = [];
+  const add = (campo, antes, despues) => {
+    if (String(antes) !== String(despues)) out.push({ campo, antes: String(antes), despues: String(despues) });
+  };
+
+  add('Nombre', prev.name, next.name);
+  add('Tipo', prev.type, next.type);
+  add('Precio', `₡${Number(prev.price).toLocaleString('es-CR')}`, `₡${Number(next.price).toLocaleString('es-CR')}`);
+  add('Precio oferta', money(prev.discountPrice), money(next.discountPrice));
+  add('Etiqueta "Nuevo"', yesNo(prev.isNew), yesNo(next.isNew));
+  add('Zona Mundialista', yesNo(prev.isMundial), yesNo(next.isMundial));
+
+  const a = prev.stock || {};
+  const b = next.stock || {};
+  for (const size of new Set([...Object.keys(a), ...Object.keys(b)])) {
+    add(`Stock talla ${size}`, Number(a[size] ?? 0), Number(b[size] ?? 0));
+  }
+
+  const prevUrls = (prev.images || []).map((i) => i.url);
+  const nextUrls = (next.images || []).map((i) => i.url);
+  const agregadas = nextUrls.filter((u) => !prevUrls.includes(u)).length;
+  const quitadas = prevUrls.filter((u) => !nextUrls.includes(u)).length;
+  if (agregadas || quitadas) {
+    const partes = [];
+    if (agregadas) partes.push(`+${agregadas} nueva${agregadas > 1 ? 's' : ''}`);
+    if (quitadas) partes.push(`-${quitadas} quitada${quitadas > 1 ? 's' : ''}`);
+    out.push({ campo: 'Imágenes', antes: `${prevUrls.length} foto(s)`, despues: `${nextUrls.length} foto(s) (${partes.join(', ')})` });
+  } else if (prevUrls[0] !== nextUrls[0] && nextUrls.length) {
+    out.push({ campo: 'Imágenes', antes: 'Orden anterior', despues: 'Cambió la foto principal' });
+  }
+
+  return out;
+}
+
 function logHistory(req, action, item, productId, details) {
   return History.create({
     user: req.user?.name || 'Desconocido',
@@ -203,7 +246,14 @@ router.post('/', requireRole('add'), upload.any(), async (req, res) => {
       isMundial: toBool(req.body.isMundial),
     });
 
-    await logHistory(req, 'Crear', product.name, product._id, 'Se creó la camiseta y se agregó al catálogo.');
+    const stockTotal = Object.values(product.stock || {}).reduce((s, n) => s + Number(n || 0), 0);
+    await logHistory(req, 'Crear', product.name, product._id, [
+      { campo: 'Tipo', antes: '', despues: product.type },
+      { campo: 'Precio', antes: '', despues: `₡${Number(product.price).toLocaleString('es-CR')}` },
+      ...(product.discountPrice ? [{ campo: 'Precio oferta', antes: '', despues: money(product.discountPrice) }] : []),
+      { campo: 'Stock inicial', antes: '', despues: `${stockTotal} unidad(es)` },
+      { campo: 'Imágenes', antes: '', despues: `${(product.images || []).length} foto(s)` },
+    ]);
 
     res.status(201).json(product);
   } catch (err) {
@@ -269,7 +319,10 @@ router.put('/:id', requireRole('edit'), async (req, res) => {
     );
     if (!updated) return res.status(404).json({ error: 'Producto no encontrado' });
 
-    await logHistory(req, 'Editar', updated.name, updated._id, 'Se modificó la información del producto.');
+    const changes = diffProduct(prev.toObject(), updated.toObject());
+    if (changes.length) {
+      await logHistory(req, 'Editar', updated.name, updated._id, changes);
+    }
 
     res.json(updated);
   } catch (err) {
@@ -293,9 +346,15 @@ router.delete('/:id', requireRole('delete'), async (req, res) => {
     }
 
     const productName = product.name;
+    const snapshot = product.toObject();
     await product.deleteOne();
 
-    await logHistory(req, 'Eliminar', productName, req.params.id, 'Se eliminó la camiseta del sistema.');
+    const stockTotal = Object.values(snapshot.stock || {}).reduce((s, n) => s + Number(n || 0), 0);
+    await logHistory(req, 'Eliminar', productName, req.params.id, [
+      { campo: 'Tipo', antes: snapshot.type, despues: '' },
+      { campo: 'Precio', antes: `₡${Number(snapshot.price).toLocaleString('es-CR')}`, despues: '' },
+      { campo: 'Stock al eliminar', antes: `${stockTotal} unidad(es)`, despues: '' },
+    ]);
 
     res.json({ message: 'Producto eliminado' });
   } catch (err) {
