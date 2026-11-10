@@ -214,8 +214,10 @@ export default function App() {
 
               {canAdd && (
                 <button 
-                  className="fixed bottom-10 right-10 bg-blue-800 text-fiebriAzul w-16 h-16 rounded-2xl shadow-2xl z-50 flex items-center justify-center hover:scale-110 active:scale-95 transition-all"
+                  className="fixed bottom-6 right-6 sm:bottom-10 sm:right-10 bg-fiebriVerde text-fiebriAzul w-16 h-16 rounded-2xl shadow-[0_10px_30px_rgba(34,197,94,0.45)] ring-4 ring-white z-50 flex items-center justify-center hover:scale-110 hover:bg-fiebriAzul hover:text-fiebriVerde active:scale-95 transition-all"
                   onClick={() => setShowAddModal(true)}
+                  aria-label="Agregar nueva camiseta"
+                  title="Agregar nueva camiseta"
                 >
 
                   <FaPlus size={24} />
