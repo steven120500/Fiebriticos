@@ -15,10 +15,18 @@ import historyRoutes from './routes/historyRoutes.js';
 dotenv.config();
 
 // 1. Verificación proactiva de variables
-if (!process.env.MONGO_URI) {
-  console.error('❌ ERROR FATAL: La variable MONGO_URI no está definida en el .env');
+for (const key of ['MONGO_URI', 'JWT_SECRET']) {
+  if (!process.env[key]) {
+    console.error(`❌ ERROR FATAL: La variable ${key} no está definida en el .env`);
+    process.exit(1);
+  }
+}
+if (process.env.JWT_SECRET.length < 32) {
+  console.error('❌ ERROR FATAL: JWT_SECRET debe tener al menos 32 caracteres aleatorios');
   process.exit(1);
 }
+
+const isProd = process.env.NODE_ENV === 'production';
 
 const app = express();
 
@@ -30,27 +38,26 @@ app.disable('x-powered-by');
 app.set('json spaces', 0);                  
 app.set('trust proxy', 1);                  
 app.use(compression());                     
-app.use(morgan('dev'));                     
+app.use(morgan(isProd ? 'combined' : 'dev'));                     
 
 /* -------- CONFIGURACIÓN DE CORS (A PRUEBA DE BALAS) -------- */
 app.use(cors({
   origin: [
-    'http://localhost:5173',
-    'http://127.0.0.1:5173',
+    ...(isProd ? [] : ['http://localhost:5173', 'http://127.0.0.1:5173']),
     'https://fiebriticos-catalogo.onrender.com',
     'https://fiebriticos.onrender.com',
     'https://fiebriticoscr.com',       // 👈 Tu nuevo dominio oficial
     'https://www.fiebriticoscr.com'
   ],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'x-user', 'x-super', 'x-roles'],
-  credentials: true,
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: false,
 }));
 
 /* -------- CONFIGURACIÓN DE PESO (ARREGLO PARA LOCAL Y FOTOS) -------- */
-// 🚀 JUGADA MAESTRA: Aumentamos los límites a 50mb para que no falle al subir fotos
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ limit: '50mb', extended: true }));
+// Límite suficiente para varias fotos en base64, sin abrir la puerta a cuerpos gigantes
+app.use(express.json({ limit: '20mb' }));
+app.use(express.urlencoded({ limit: '1mb', extended: false }));
 
 /* -------- RUTAS DE LA API -------- */
 app.use('/api/auth', authRoutes);
@@ -63,9 +70,10 @@ app.get('/', (req, res) => res.send('⚽ BACKEND FIEBRITICOS ONLINE Y CONECTADO 
 // 2. Middleware Global de Errores
 app.use((err, req, res, next) => {
   console.error("💥 Error Detectado:", err.stack);
-  res.status(500).json({ 
-    error: 'Error interno en los vestuarios', 
-    message: err.message 
+  const status = Number.isInteger(err.status) && err.status >= 400 && err.status < 600 ? err.status : 500;
+  // No exponemos detalles internos al cliente
+  res.status(status).json({
+    error: status === 500 ? 'Error interno en los vestuarios' : (err.expose ? err.message : 'Solicitud inválida'),
   });
 });
 

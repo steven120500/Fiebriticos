@@ -68,7 +68,7 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
           body: JSON.stringify({ email }),
         });
         if (!res.ok) throw new Error('No pudimos procesar la solicitud');
-        toast.success('Enlace de recuperación enviado por correo.');
+        toast.success('Si el correo existe, se generó un enlace de recuperación. Contacta al administrador.');
         setMode('login');
         return;
       }
@@ -95,6 +95,7 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
       } else {
         // Mapeo seguro de datos del usuario
         const userData = {
+          token: data.token,
           id: data.id,
           username: data.firstName || 'Fiebre', 
           firstName: data.firstName,

@@ -23,7 +23,8 @@ const userSchema = new mongoose.Schema({
     unique: true, 
     lowercase: true, 
     trim: true,
-    match: [/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/, 'Por favor, ingresa un correo válido']
+    maxlength: 254,
+    match: [/^[^\s@]+@[^\s@]+\.[^\s@]+$/, 'Por favor, ingresa un correo válido']
   },
   // ✅ Nuevo campo: Celular (8 dígitos exactos)
   phone: {
@@ -47,7 +48,7 @@ const userSchema = new mongoose.Schema({
   resetPasswordToken: String,
   resetPasswordExpires: Date,
 
-  roles: [{ type: String }], 
+  roles: [{ type: String }], // roles válidos: add, edit, delete, history (filtrados en las rutas)
   isSuperUser: { type: Boolean, default: false }
 }, {
   timestamps: true 

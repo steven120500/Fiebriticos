@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useMemo } from 'react';
 import { toast } from 'react-toastify';
 import { FaWhatsapp, FaTimes, FaChevronLeft, FaChevronRight, FaEdit, FaTrashAlt, FaFutbol, FaCheckCircle } from 'react-icons/fa';
 import { motion, AnimatePresence } from "framer-motion";
+import { authHeaders } from '../auth';
 
 const API_BASE = import.meta.env.VITE_API_URL || "https://fiebriticos.onrender.com";
 
@@ -70,7 +71,6 @@ export default function ProductModal({ product, onClose, onUpdate, canEdit, canD
     if (loading) return;
     try {
       setLoading(true);
-      const displayName = user?.username || 'Fiebriticos';
       const payload = {
         name: editedName.trim(),
         price: parseInt(editedPrice, 10),
@@ -83,7 +83,7 @@ export default function ProductModal({ product, onClose, onUpdate, canEdit, canD
 
       const res = await fetch(`${API_BASE}/api/products/${product._id || product.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', 'x-user': displayName },
+        headers: authHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(payload),
       });
 
@@ -102,7 +102,7 @@ export default function ProductModal({ product, onClose, onUpdate, canEdit, canD
       setLoading(true);
       const res = await fetch(`${API_BASE}/api/products/${product._id || product.id}`, {
         method: 'DELETE',
-        headers: { 'x-user': user?.username || 'Fiebriticos' },
+        headers: authHeaders(),
       });
       if (!res.ok) throw new Error();
       toast.success('Producto eliminado');

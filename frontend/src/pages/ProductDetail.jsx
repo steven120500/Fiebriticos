@@ -16,6 +16,7 @@ import Footer from '../components/Footer';
 import LoginModal from '../components/LoginModal'; 
 import RegisterUserModal from '../components/RegisterUserModal'; 
 import Medidas from '../components/Medidas';
+import { authHeaders } from '../auth';
 
 // 🚀 JUGADA INTELIGENTE: Detecta si es local o producción
 const API_BASE = import.meta.env.VITE_API_URL || "https://fiebriticos.onrender.com"; 
@@ -118,10 +119,7 @@ export default function ProductDetail({
 
       const res = await fetch(`${API_BASE}/api/products/${id}`, {
         method: 'PUT',
-        headers: { 
-          'Content-Type': 'application/json', 
-          'x-user': user?.username || 'Admin' 
-        },
+        headers: authHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(payload),
       });
 
@@ -129,7 +127,7 @@ export default function ProductDetail({
       
       if (!res.ok) {
         console.log("❌ ERROR DEL BACKEND:", data); 
-        throw new Error(data.message || "Error al actualizar");
+        throw new Error(data.error || data.message || "Error al actualizar");
       }
 
       setProduct(data);
@@ -150,7 +148,7 @@ export default function ProductDetail({
     try {
       const res = await fetch(`${API_BASE}/api/products/${id}`, {
         method: 'DELETE',
-        headers: { 'x-user': user?.username || 'Admin' },
+        headers: authHeaders(),
       });
       if (!res.ok) throw new Error();
       toast.success("Producto fuera del catálogo");

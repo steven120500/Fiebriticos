@@ -1,12 +1,18 @@
 import express from 'express';
 import PDFDocument from 'pdfkit';
-import Product from '../models/Product.js'; // Asegúrate del path correcto
+import Product from '../models/Product.js';
+import { requireAuth } from '../middleware/auth.js';
 
 const router = express.Router();
 
-router.get('/export-products-pdf', async (req, res) => {
+// Solo personal autenticado puede exportar el inventario completo.
+router.get('/export-products-pdf', requireAuth, async (req, res) => {
   try {
-    const products = await Product.find();
+    if (!req.user.isSuperUser && req.user.roles.length === 0) {
+      return res.status(403).json({ error: 'No tienes permiso para exportar el inventario' });
+    }
+
+    const products = await Product.find().lean();
 
     const doc = new PDFDocument({ margin: 30, size: 'A4' });
 
@@ -36,8 +42,8 @@ router.get('/export-products-pdf', async (req, res) => {
 
     doc.end();
   } catch (error) {
-    console.error('Error exportando PDF:', error);
-    res.status(500).json({ error: 'Error generando el PDF' });
+    console.error('Error exportando PDF:', error.message);
+    if (!res.headersSent) res.status(500).json({ error: 'Error generando el PDF' });
   }
 });
 

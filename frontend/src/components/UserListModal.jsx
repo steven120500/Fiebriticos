@@ -2,13 +2,14 @@ import React, { useEffect, useState } from "react";
 import { toast as toastHOT } from "react-hot-toast";
 import { FaUsers, FaTimes, FaTrashAlt, FaShieldAlt, FaUserCircle, FaFutbol } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
+import { authHeaders, getStoredUser } from "../auth";
 
 const API_BASE = import.meta.env.VITE_API_URL || "https://fiebriticos.onrender.com";
 
 export default function UserListModal({ open, onClose }) {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
-  const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
+  const currentUser = getStoredUser() || {};
 
   useEffect(() => {
     if (open) fetchUsers();
@@ -17,9 +18,8 @@ export default function UserListModal({ open, onClose }) {
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const token = currentUser.token; 
-      const res = await fetch(`${API_BASE}/api/auth/users`, { 
-        headers: { Accept: "application/json", Authorization: `Bearer ${token}` } 
+      const res = await fetch(`${API_BASE}/api/auth/users`, {
+        headers: authHeaders({ Accept: "application/json" }),
       });
       if (!res.ok) throw new Error();
       const data = await res.json();
@@ -35,7 +35,7 @@ export default function UserListModal({ open, onClose }) {
     try {
       const res = await fetch(`${API_BASE}/api/auth/users/${userId}`, {
         method: "DELETE",
-        headers: { Authorization: `Bearer ${currentUser.token}`, Accept: "application/json" },
+        headers: authHeaders({ Accept: "application/json" }),
       });
       if (!res.ok) throw new Error();
       setUsers((prev) => prev.filter((u) => u._id !== userId));

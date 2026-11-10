@@ -3,8 +3,9 @@ import { toast } from "react-toastify";
 import { FaHistory, FaTrash, FaUser, FaCalendarAlt, FaArrowLeft, FaSearch, FaFutbol } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import Footer from "../components/Footer";
+import { authHeaders } from "../auth";
 
-const API_BASE = import.meta.env.VITE_API_BASE || "https://fiebriticos.onrender.com";
+const API_BASE = import.meta.env.VITE_API_URL || "https://fiebriticos.onrender.com";
 
 /* --- Utilidades de fecha --- */
 function pad2(n) { return n < 10 ? `0${n}` : `${n}`; }
@@ -27,7 +28,6 @@ export default function HistoryPage({ user }) {
   const fetchHistory = async () => {
     setLoading(true);
     try {
-      const roles = Array.isArray(user?.roles) ? user.roles.join(",") : "";
       const params = new URLSearchParams({
         page: "1",
         limit: "500",
@@ -36,11 +36,7 @@ export default function HistoryPage({ user }) {
       });
 
       const res = await fetch(`${API_BASE}/api/history?` + params.toString(), {
-        headers: {
-          "Content-Type": "application/json",
-          "x-super": isSuperUser ? "true" : "false",
-          "x-roles": roles,
-        },
+        headers: authHeaders(),
       });
 
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -65,10 +61,7 @@ export default function HistoryPage({ user }) {
     try {
       const res = await fetch(`${API_BASE}/api/history`, {
         method: "DELETE",
-        headers: { 
-          "Content-Type": "application/json",
-          "x-super": isSuperUser ? "true" : "false"
-        },
+        headers: authHeaders(),
       });
       if (!res.ok) throw new Error();
       toast.success("Historial limpiado correctamente.");

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { toast } from "react-toastify";
 import { FaTimes, FaEye, FaEyeSlash, FaUser, FaPhone, FaEnvelope, FaLock, FaFutbol, FaShieldAlt } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
+import { authHeaders } from "../auth";
 
 const API_BASE = import.meta.env.VITE_API_URL || "https://fiebriticos.onrender.com";
 
@@ -58,9 +59,10 @@ export default function RegisterUserModal({ onClose }) {
         roles: selectedRoles 
       };
 
+      // El token permite al superusuario asignar roles; sin él el backend los ignora
       const res = await fetch(`${API_BASE}/api/auth/register`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: authHeaders({ "Content-Type": "application/json" }),
         body: JSON.stringify(payload),
       });
 

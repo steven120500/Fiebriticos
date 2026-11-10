@@ -34,6 +34,7 @@ import ProductDetail from "./pages/ProductDetail.jsx";
 import Checkout from "./pages/Checkout.jsx"; 
 import OrdersPage from "./pages/OrdersPage.jsx"; 
 import HistoryPage from "./pages/HistoryPage.jsx";
+import { getStoredUser } from "./auth";
 
 // 👇 JUGADA CORREGIDA: Ahora Vite lee tu .env (el que dice localhost:5001)
 const API_BASE = import.meta.env.VITE_API_URL || "https://fiebriticos.onrender.com"; 
@@ -78,13 +79,12 @@ export default function App() {
 
   // --- AUTENTICACIÓN ---
   const [user, setUser] = useState(() => {
-    try {
-      const storedUser = localStorage.getItem("user");
-      return storedUser ? JSON.parse(storedUser) : null;
-    } catch { return null; }
+    const stored = getStoredUser();
+    if (!stored) localStorage.removeItem("user");
+    return stored;
   });
 
-  const isSuperUser = user?.isSuperUser === true || user?.role === "admin" || user?.role === "superadmin";
+  const isSuperUser = user?.isSuperUser === true;
   
   const canSeeHistory = isSuperUser || (user?.roles && user.roles.includes("history"));
   const canAdd = isSuperUser || (user?.roles && user.roles.includes("add"));

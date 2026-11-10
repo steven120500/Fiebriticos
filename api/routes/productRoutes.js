@@ -1,14 +1,20 @@
 import express from 'express';
+import mongoose from 'mongoose';
 import Product from '../models/Product.js';
 import History from '../models/History.js';
 import cloudinary from '../config/cloudinary.js';
 import multer from 'multer';
+import { requireRole } from '../middleware/auth.js';
 
 const router = express.Router();
 
 /* ================= Multer (Para subidas directas) ================= */
-const storage = multer.memoryStorage();
-const upload = multer({ storage });
+const MAX_IMAGES = 10;
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024, files: MAX_IMAGES },
+  fileFilter: (_req, file, cb) => cb(null, /^image\/(png|jpe?g|webp|heic|heif)$/i.test(file.mimetype)),
+});
 
 /* ================= Helpers ================= */
 const ADULT_SIZES = ['S', 'M', 'L', 'XL', 'XXL', '3XL', '4XL'];
@@ -16,11 +22,18 @@ const KID_SIZES = ['16', '18', '20', '22', '24', '26', '28'];
 const BALL_SIZES = ['3', '4', '5'];
 const ALL_SIZES = new Set([...ADULT_SIZES, ...KID_SIZES, ...BALL_SIZES]);
 
+const DATA_IMAGE_RE = /^data:image\/(png|jpe?g|webp|heic|heif);base64,[A-Za-z0-9+/=\s]+$/i;
+const HTTPS_URL_RE = /^https:\/\/[^\s"'<>]+$/i;
+
+const str = (v) => (typeof v === 'string' ? v : '');
+const toBool = (v) => v === true || v === 'true';
+const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
 /** Helper para subir Buffers (Multer) */
 function uploadToCloudinary(buffer) {
   return new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
-      { folder: 'fiebriticos_products', resource_type: 'image' }, 
+      { folder: 'fiebriticos_products', resource_type: 'image' },
       (err, result) => (err ? reject(err) : resolve(result))
     );
     stream.end(buffer);
@@ -30,12 +43,36 @@ function uploadToCloudinary(buffer) {
 /** Helper para limpiar stock */
 function sanitizeInv(obj) {
   const clean = {};
-  for (const [size, qty] of Object.entries(obj || {})) {
+  if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return clean;
+  for (const [size, qty] of Object.entries(obj)) {
     if (!ALL_SIZES.has(String(size))) continue;
-    const n = Math.max(0, Math.trunc(Number(qty) || 0));
-    clean[size] = n;
+    clean[size] = Math.max(0, Math.trunc(Number(qty) || 0));
   }
   return clean;
+}
+
+function parsePrice(v) {
+  if (v === null || v === undefined || v === '') return null;
+  const n = Math.trunc(Number(v));
+  return Number.isFinite(n) && n >= 0 ? n : NaN;
+}
+
+function logHistory(req, action, item, productId, details) {
+  return History.create({
+    user: req.user?.name || 'Desconocido',
+    action,
+    item,
+    productId: String(productId),
+    details,
+  }).catch((err) => console.error('Error historial:', err.message));
+}
+
+function validId(req, res) {
+  if (!mongoose.isValidObjectId(req.params.id)) {
+    res.status(404).json({ error: 'Producto no encontrado' });
+    return false;
+  }
+  return true;
 }
 
 /* ================= Rutas ================= */
@@ -53,20 +90,20 @@ router.get('/health', async (_req, res) => {
 /** 1. Listado paginado */
 router.get('/', async (req, res) => {
   try {
-    const page = Math.max(parseInt(req.query.page || '1', 10), 1);
-    const limit = Math.min(Math.max(parseInt(req.query.limit || '20', 10), 1), 100);
-    const q = (req.query.q || '').trim();
-    const type = (req.query.type || '').trim();
-    const sizes = (req.query.sizes || '').trim();
-    const mode = (req.query.mode || '').trim();
-    const isMundial = req.query.isMundial === 'true'; // 🌎 JUGADA MUNDIALISTA: Detectamos el parámetro
+    const page = Math.min(Math.max(parseInt(str(req.query.page) || '1', 10) || 1, 1), 10000);
+    const limit = Math.min(Math.max(parseInt(str(req.query.limit) || '20', 10) || 20, 1), 100);
+    const q = str(req.query.q).trim().slice(0, 100);
+    const type = str(req.query.type).trim().slice(0, 40);
+    const sizes = str(req.query.sizes).trim();
+    const mode = str(req.query.mode).trim();
+    const isMundial = req.query.isMundial === 'true';
 
     const find = {};
-    if (q) find.name = { $regex: q, $options: 'i' };
+    // Escapamos la búsqueda para evitar inyección de regex / ReDoS
+    if (q) find.name = { $regex: escapeRegex(q), $options: 'i' };
 
-    // 🌎 Filtro exclusivo para Mundialistas
     if (isMundial) {
-        find.isMundial = true;
+      find.isMundial = true;
     } else if (type === 'Ofertas') {
       find.discountPrice = { $ne: null, $gt: 0 };
     } else if (mode === 'disponibles') {
@@ -79,13 +116,13 @@ router.get('/', async (req, res) => {
     }
 
     if (sizes) {
-      const sizesArray = sizes.split(',').map((s) => s.trim()).filter(Boolean);
+      // Solo tallas válidas: evita inyectar rutas arbitrarias en la consulta
+      const sizesArray = sizes.split(',').map((s) => s.trim()).filter((s) => ALL_SIZES.has(s));
       if (sizesArray.length > 0) {
         find.$or = sizesArray.map((size) => ({ [`stock.${size}`]: { $gt: 0 } }));
       }
     }
 
-    // 🌎 Aseguramos devolver "isMundial" en el listado
     const projection = 'name price discountPrice type imageSrc images stock bodega createdAt isNew isMundial';
 
     const [items, total] = await Promise.all([
@@ -98,117 +135,125 @@ router.get('/', async (req, res) => {
       items: items || [],
       total: total || 0,
       page,
-      pages: limit > 0 ? Math.ceil(total / limit) : 0,
+      pages: Math.ceil(total / limit),
       limit,
     });
   } catch (err) {
-    console.error('❌ ERROR GET /api/products:', err);
-    res.status(500).json({ error: 'Error al obtener los productos', details: err.message });
+    console.error('❌ ERROR GET /api/products:', err.message);
+    res.status(500).json({ error: 'Error al obtener los productos' });
   }
 });
 
 /** 2. Obtener un solo producto por ID */
 router.get('/:id', async (req, res) => {
+  if (!validId(req, res)) return;
   try {
     const product = await Product.findById(req.params.id);
     if (!product) return res.status(404).json({ error: 'Producto no encontrado' });
     res.json(product);
-  } catch (err) {
-    if (err.kind === 'ObjectId') return res.status(404).json({ error: 'Producto no encontrado' });
+  } catch {
     res.status(500).json({ error: 'Error al obtener el producto' });
   }
 });
 
-/** 3. Crear producto (Soporta JSON/Base64 y FormData) */
-router.post('/', upload.any(), async (req, res) => {
+/** 3. Crear producto (Soporta JSON/Base64 y FormData) — requiere rol "add" */
+router.post('/', requireRole('add'), upload.any(), async (req, res) => {
   try {
     let images = [];
 
-    // 🚀 JUGADA PARA BASE64 (JSON)
-    if (req.body.images && Array.isArray(req.body.images)) {
-      const uploadPromises = req.body.images.map(imgBase64 => 
-        cloudinary.uploader.upload(imgBase64, { folder: 'fiebriticos_products' })
+    if (Array.isArray(req.body.images) && req.body.images.length > 0) {
+      const list = req.body.images.slice(0, MAX_IMAGES);
+      // Solo aceptamos imágenes en base64 (nunca URLs arbitrarias que Cloudinary iría a descargar)
+      if (!list.every((img) => typeof img === 'string' && DATA_IMAGE_RE.test(img))) {
+        return res.status(400).json({ error: 'Formato de imagen inválido' });
+      }
+      const results = await Promise.all(
+        list.map((img) => cloudinary.uploader.upload(img, { folder: 'fiebriticos_products', resource_type: 'image' }))
       );
-      const results = await Promise.all(uploadPromises);
-      images = results.map(u => ({ public_id: u.public_id, url: u.secure_url }));
-    } 
-    // 🚀 JUGADA PARA BINARIOS (Multer/FormData)
-    else if (req.files && req.files.length > 0) {
-      const files = req.files.filter(f => f.fieldname === 'images' || f.fieldname === 'image');
-      const uploaded = await Promise.all(files.map(f => uploadToCloudinary(f.buffer)));
-      images = uploaded.map(u => ({ public_id: u.public_id, url: u.secure_url }));
+      images = results.map((u) => ({ public_id: u.public_id, url: u.secure_url }));
+    } else if (req.files && req.files.length > 0) {
+      const files = req.files.filter((f) => f.fieldname === 'images' || f.fieldname === 'image');
+      const uploaded = await Promise.all(files.map((f) => uploadToCloudinary(f.buffer)));
+      images = uploaded.map((u) => ({ public_id: u.public_id, url: u.secure_url }));
     }
 
-    const imageSrc = images[0]?.url || '';
-
-    // Procesar Stock
     let stock = {};
     try {
       if (typeof req.body.stock === 'string') stock = JSON.parse(req.body.stock);
       else if (typeof req.body.stock === 'object') stock = req.body.stock;
-    } catch { stock = {}; }
-    
-    const isNew = req.body.isNew === 'true' || req.body.isNew === true;
-    const isMundial = req.body.isMundial === 'true' || req.body.isMundial === true; // 🌎 NUEVO
+    } catch {
+      stock = {};
+    }
+
+    const price = parsePrice(req.body.price);
+    const discountPrice = parsePrice(req.body.discountPrice);
+    if (price === null || Number.isNaN(price) || Number.isNaN(discountPrice)) {
+      return res.status(400).json({ error: 'Precio inválido' });
+    }
 
     const product = await Product.create({
-      name: String(req.body.name || '').trim(),
-      price: Number(req.body.price),
-      discountPrice: req.body.discountPrice ? Number(req.body.discountPrice) : null,
-      type: String(req.body.type || '').trim(),
+      name: str(req.body.name).trim(),
+      price,
+      discountPrice,
+      type: str(req.body.type).trim(),
       stock: sanitizeInv(stock),
-      imageSrc,
+      imageSrc: images[0]?.url || undefined,
       images,
-      isNew,
-      isMundial, // 🌎 NUEVO
+      isNew: toBool(req.body.isNew),
+      isMundial: toBool(req.body.isMundial),
     });
 
-    // Registro de Historial
-    const adminUser = req.headers['x-user'] || 'Administrador';
-    await History.create({
-      user: adminUser,
-      action: 'Crear',
-      item: product.name,
-      productId: product._id,
-      details: 'Se creó la camiseta y se agregó al catálogo.'
-    }).catch(err => console.error("Error historial:", err));
+    await logHistory(req, 'Crear', product.name, product._id, 'Se creó la camiseta y se agregó al catálogo.');
 
     res.status(201).json(product);
   } catch (err) {
-    console.error("❌ Error en POST /api/products:", err);
-    res.status(500).json({ error: err.message || 'Error al crear producto' });
+    console.error('❌ Error en POST /api/products:', err.message);
+    if (err.name === 'ValidationError') return res.status(400).json({ error: err.message });
+    res.status(500).json({ error: 'Error al crear producto' });
   }
 });
 
-/** 4. Actualizar producto */
-router.put('/:id', async (req, res) => {
+/** 4. Actualizar producto — requiere rol "edit" */
+router.put('/:id', requireRole('edit'), async (req, res) => {
+  if (!validId(req, res)) return;
   try {
     const prev = await Product.findById(req.params.id);
     if (!prev) return res.status(404).json({ error: 'Producto no encontrado' });
 
-    let nextStock = prev.stock;
-    if (req.body.stock) nextStock = sanitizeInv(req.body.stock);
+    const name = str(req.body.name).trim();
+    const type = str(req.body.type).trim();
+    const price = req.body.price !== undefined ? parsePrice(req.body.price) : prev.price;
+    const discountPrice = req.body.discountPrice !== undefined ? parsePrice(req.body.discountPrice) : prev.discountPrice;
 
+    if (price === null || Number.isNaN(price) || Number.isNaN(discountPrice)) {
+      return res.status(400).json({ error: 'Precio inválido' });
+    }
+
+    // Nota: no usamos prev.save() porque "isNew" es un nombre reservado de Mongoose.
     const update = {
-      name: req.body.name ? req.body.name.trim() : prev.name,
-      type: req.body.type ? req.body.type.trim() : prev.type,
-      price: Number(req.body.price) || prev.price,
-      discountPrice: req.body.discountPrice !== undefined ? Number(req.body.discountPrice) : prev.discountPrice,
-      stock: nextStock,
-      isNew: req.body.isNew !== undefined ? req.body.isNew : prev.isNew,
-      isMundial: req.body.isMundial !== undefined ? req.body.isMundial : prev.isMundial // 🌎 NUEVO
+      name: name || prev.name,
+      type: type || prev.type,
+      price,
+      discountPrice: discountPrice && discountPrice > 0 ? discountPrice : null,
+      stock: req.body.stock ? sanitizeInv(req.body.stock) : prev.stock,
+      isNew: req.body.isNew !== undefined ? toBool(req.body.isNew) : prev.get('isNew'),
+      isMundial: req.body.isMundial !== undefined ? toBool(req.body.isMundial) : prev.isMundial,
     };
 
-    // Procesar imágenes nuevas si vienen en Base64
     if (Array.isArray(req.body.images)) {
+      const list = req.body.images.slice(0, MAX_IMAGES);
+      const existingByUrl = new Map(
+        (prev.images || []).map((img) => [img.url, { public_id: img.public_id ?? null, url: img.url }])
+      );
       const normalized = [];
-      for (const raw of req.body.images) {
-        if (typeof raw === 'string' && raw.startsWith('data:')) {
-          const up = await cloudinary.uploader.upload(raw, { folder: 'fiebriticos_products' });
+      for (const raw of list) {
+        if (typeof raw !== 'string') continue;
+        if (DATA_IMAGE_RE.test(raw)) {
+          const up = await cloudinary.uploader.upload(raw, { folder: 'fiebriticos_products', resource_type: 'image' });
           normalized.push({ public_id: up.public_id, url: up.secure_url });
-        } else {
-          // Mantener imágenes que ya eran URLs
-          normalized.push({ public_id: null, url: raw });
+        } else if (HTTPS_URL_RE.test(raw)) {
+          // Mantener imágenes existentes (conservando su public_id para poder borrarlas luego)
+          normalized.push(existingByUrl.get(raw) || { public_id: null, url: raw });
         }
       }
       if (normalized.length > 0) {
@@ -217,48 +262,44 @@ router.put('/:id', async (req, res) => {
       }
     }
 
-    const updated = await Product.findByIdAndUpdate(req.params.id, { $set: update }, { new: true });
+    const updated = await Product.findByIdAndUpdate(
+      req.params.id,
+      { $set: update },
+      { new: true, runValidators: true }
+    );
+    if (!updated) return res.status(404).json({ error: 'Producto no encontrado' });
 
-    const adminUser = req.headers['x-user'] || 'Administrador';
-    await History.create({
-      user: adminUser,
-      action: 'Editar',
-      item: updated.name,
-      productId: updated._id,
-      details: 'Se modificó la información del producto.'
-    }).catch(err => console.error("Error historial:", err));
+    await logHistory(req, 'Editar', updated.name, updated._id, 'Se modificó la información del producto.');
 
     res.json(updated);
   } catch (err) {
-    console.error("❌ Error en PUT /api/products:", err);
+    console.error('❌ Error en PUT /api/products:', err.message);
+    if (err.name === 'ValidationError') return res.status(400).json({ error: err.message });
     res.status(500).json({ error: 'Error al actualizar producto' });
   }
 });
 
-/** 5. Eliminar producto */
-router.delete('/:id', async (req, res) => {
+/** 5. Eliminar producto — requiere rol "delete" */
+router.delete('/:id', requireRole('delete'), async (req, res) => {
+  if (!validId(req, res)) return;
   try {
     const product = await Product.findById(req.params.id);
     if (!product) return res.status(404).json({ error: 'Producto no encontrado' });
 
     for (const img of product.images || []) {
-      if (img.public_id) { try { await cloudinary.uploader.destroy(img.public_id); } catch {} }
+      if (img.public_id) {
+        try { await cloudinary.uploader.destroy(img.public_id); } catch {}
+      }
     }
-    
-    const productName = product.name; 
+
+    const productName = product.name;
     await product.deleteOne();
 
-    const adminUser = req.headers['x-user'] || 'Administrador';
-    await History.create({
-      user: adminUser,
-      action: 'Eliminar',
-      item: productName, 
-      productId: req.params.id,
-      details: 'Se eliminó la camiseta del sistema.'
-    }).catch(err => console.error("Error historial:", err));
+    await logHistory(req, 'Eliminar', productName, req.params.id, 'Se eliminó la camiseta del sistema.');
 
     res.json({ message: 'Producto eliminado' });
   } catch (err) {
+    console.error('❌ Error en DELETE /api/products:', err.message);
     res.status(500).json({ error: 'Error al eliminar producto' });
   }
 });

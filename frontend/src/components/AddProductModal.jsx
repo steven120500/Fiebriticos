@@ -4,6 +4,7 @@ import { toast } from "react-toastify";
 import { motion, AnimatePresence } from "framer-motion";
 import "react-toastify/dist/ReactToastify.css";
 import tallaPorTipo from "../utils/tallaPorTipo";
+import { authHeaders } from "../auth";
 
 const API_BASE = window.location.hostname === "localhost" 
   ? "http://localhost:5001" 
@@ -127,17 +128,14 @@ export default function AddProductModal({ onAdd, onCancel, user }) {
 
       const res = await fetch(`${API_BASE}/api/products`, {
         method: "POST",
-        headers: { 
-          "Content-Type": "application/json", 
-          "x-user": user?.username || "Admin" 
-        },
+        headers: authHeaders({ "Content-Type": "application/json" }),
         body: JSON.stringify(payload),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.message || "Error al guardar la chema");
+        throw new Error(data.error || data.message || "Error al guardar la chema");
       }
 
       onAdd?.(data);
