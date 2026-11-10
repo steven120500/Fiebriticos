@@ -1,4 +1,5 @@
 import { FaFacebookF, FaInstagram, FaWhatsapp, FaFutbol } from 'react-icons/fa';
+import { NAVIDAD_ACTIVA, EstrellaMini } from './navidad/Navidad';
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -14,6 +15,12 @@ export default function Footer() {
             FIEBRITICOS <span className="text-fiebriVerde">CR</span>
           </h2>
         </div>
+
+        {NAVIDAD_ACTIVA && (
+          <p className="flex items-center gap-2 -mt-2 mb-6 text-xs font-bold uppercase tracking-[0.3em] text-white/70">
+            <EstrellaMini /> <span className="nv-oro-texto">Felices fiestas</span> y próspero {currentYear + 1} <EstrellaMini />
+          </p>
+        )}
 
         {/* Redes Sociales Rápidas */}
         <div className="flex gap-6 mb-10">

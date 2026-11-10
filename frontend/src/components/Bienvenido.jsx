@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { FaFutbol, FaArrowRight, FaTag, FaTruck, FaTshirt, FaChild } from "react-icons/fa";
 import MundialBanner from "./MundialBanner"; // 👈 Banner mundialista (desactivado abajo)
+import { NAVIDAD_ACTIVA, CieloEstrellado, EsferasColgantes } from "./navidad/Navidad";
 
 const AUTOPLAY_MS = 3500;
 
@@ -48,6 +49,10 @@ export default function Bienvenido({ setFilterType }) {
       {/* 🌟 Resplandor de fondo detrás de las chemas */}
       <div className="absolute inset-0 z-0 pointer-events-none bg-[radial-gradient(ellipse_at_75%_50%,rgba(34,197,94,0.22),transparent_55%),radial-gradient(ellipse_at_10%_0%,rgba(255,255,255,0.08),transparent_45%)]" />
 
+      {/* 🎄 Noche buena: estrellas y esferas */}
+      <CieloEstrellado />
+      <EsferasColgantes />
+
       {/* ⚽️ Balón decorativo */}
       <motion.div
         animate={reduceMotion ? undefined : { rotate: 360 }}
@@ -66,13 +71,15 @@ export default function Bienvenido({ setFilterType }) {
             variants={{ show: { transition: { staggerChildren: 0.12 } } }}
             className="lg:w-1/2 flex flex-col items-center lg:items-start text-center lg:text-left"
           >
-            <motion.span
-              variants={itemVariants}
-              className="inline-flex items-center gap-2 bg-white/10 border border-white/15 text-white/90 text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] px-4 py-2 rounded-full mb-6 backdrop-blur-sm"
-            >
-              <span className="w-2 h-2 rounded-full bg-fiebriVerde animate-pulse" />
-              Camisetas de fútbol · Costa Rica
-            </motion.span>
+            {!NAVIDAD_ACTIVA && (
+              <motion.span
+                variants={itemVariants}
+                className="inline-flex items-center gap-2 bg-white/10 border border-white/15 text-white/90 text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] px-4 py-2 rounded-full mb-6 backdrop-blur-sm"
+              >
+                <span className="w-2 h-2 rounded-full bg-fiebriVerde animate-pulse" />
+                Camisetas de fútbol · Costa Rica
+              </motion.span>
+            )}
 
             <motion.h1
               variants={itemVariants}
@@ -86,7 +93,9 @@ export default function Bienvenido({ setFilterType }) {
               variants={itemVariants}
               className="text-white/80 text-base md:text-xl font-medium max-w-lg mb-8 leading-relaxed"
             >
-              Las mejores chemas del país con la calidad que solo un verdadero fiebre reconoce.
+              {NAVIDAD_ACTIVA
+                ? "Este diciembre regalá pasión: las mejores chemas del país, con la calidad que solo un verdadero fiebre reconoce."
+                : "Las mejores chemas del país con la calidad que solo un verdadero fiebre reconoce."}
             </motion.p>
 
             <motion.div variants={itemVariants} className="flex flex-wrap justify-center lg:justify-start gap-3 mb-8">

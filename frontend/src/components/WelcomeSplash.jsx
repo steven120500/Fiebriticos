@@ -1,7 +1,54 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence, useMotionValue, useTransform, animate, useReducedMotion } from 'framer-motion';
 
+import { NAVIDAD_ACTIVA, CieloEstrellado } from './navidad/Navidad';
+
 const LOGO = '/logo.png';
+const BULBS = 18;
+const BULB_COLORS = ['#F5C451', '#EF4444', '#FFFFFF', '#22C55E'];
+
+/* 💡 Bombillo del anillo: se enciende cuando la aguja pasa por su ángulo */
+function BombilloAnillo({ index, sweep, built }) {
+  const angle = (index / BULBS) * 360;
+  const rad = (angle * Math.PI) / 180;
+  const on = useTransform(sweep, [Math.max(angle - 1, 0), angle + 6], [0.15, 1]);
+  const color = BULB_COLORS[index % BULB_COLORS.length];
+  return (
+    <motion.span
+      className={`nv-ring-bulb ${built ? 'nv-ring-bulb--on' : ''}`}
+      style={{
+        left: `${50 + Math.sin(rad) * 64}%`,
+        top: `${50 - Math.cos(rad) * 64}%`,
+        opacity: on,
+        '--nv-c': color,
+        animationDelay: `${(index % 6) * 0.25}s`,
+      }}
+    />
+  );
+}
+
+/* ✨ Destello dorado al completar el logo */
+function Destello() {
+  return (
+    <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
+      {Array.from({ length: 10 }).map((_, i) => {
+        const a = (i / 10) * Math.PI * 2;
+        return (
+          <motion.svg
+            key={i}
+            viewBox="0 0 20 20"
+            className="absolute left-1/2 top-1/2 w-3 h-3 -ml-1.5 -mt-1.5"
+            initial={{ x: 0, y: 0, opacity: 0, scale: 0.4 }}
+            animate={{ x: Math.cos(a) * 150, y: Math.sin(a) * 150, opacity: [0, 1, 0], scale: [0.4, 1, 0.6] }}
+            transition={{ duration: 1, ease: 'easeOut' }}
+          >
+            <path d="M10,0 l2.6,7.4 7.4,2.6 -7.4,2.6 -2.6,7.4 -2.6,-7.4 -7.4,-2.6 7.4,-2.6z" fill="#F5C451" />
+          </motion.svg>
+        );
+      })}
+    </div>
+  );
+}
 const TITLE = 'FIEBRITICOS';
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -78,12 +125,21 @@ export default function WelcomeSplash({ onFinish }) {
             className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(34,197,94,0.18)_0%,transparent_65%)] pointer-events-none"
           />
 
+          {/* 🎄 Cielo de noche buena */}
+          {NAVIDAD_ACTIVA && <CieloEstrellado />}
+
           {/* ---------- LOGO EN CONSTRUCCIÓN ---------- */}
           <motion.div
             animate={built && !reduceMotion ? { scale: [1, 1.08, 1] } : { scale: 1 }}
             transition={{ duration: 0.5, ease: 'easeOut' }}
             className="relative w-44 h-44 sm:w-56 sm:h-56"
           >
+            {/* 🎄 Anillo de luces que se encienden con la aguja */}
+            {NAVIDAD_ACTIVA && Array.from({ length: BULBS }).map((_, i) => (
+              <BombilloAnillo key={i} index={i} sweep={sweep} built={built} />
+            ))}
+            {NAVIDAD_ACTIVA && built && !reduceMotion && <Destello />}
+
             {/* 1) Contorno que se dibuja como una costura */}
             <svg viewBox="0 0 100 100" className="absolute -inset-3 w-[calc(100%+1.5rem)] h-[calc(100%+1.5rem)] -rotate-90">
               <motion.circle
@@ -168,16 +224,16 @@ export default function WelcomeSplash({ onFinish }) {
                   initial={{ width: 0 }}
                   animate={{ width: 80 }}
                   transition={{ delay: 0.35, duration: 0.4 }}
-                  className="h-[2px] bg-fiebriVerde mx-auto my-2"
+                  className={`h-[2px] mx-auto my-2 ${NAVIDAD_ACTIVA ? 'bg-gradient-to-r from-transparent via-[#F5C451] to-transparent' : 'bg-fiebriVerde'}`}
                 />
 
                 <motion.p
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.5, duration: 0.4 }}
-                  className="text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.4em] text-gray-400"
+                  className={`text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.4em] ${NAVIDAD_ACTIVA ? 'nv-oro-texto' : 'text-gray-400'}`}
                 >
-                  Saltando a la cancha...
+                  {NAVIDAD_ACTIVA ? '✦ Felices fiestas, fiebres ✦' : 'Saltando a la cancha...'}
                 </motion.p>
               </>
             )}

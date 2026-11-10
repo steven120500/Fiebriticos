@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { FaFutbol, FaTag } from "react-icons/fa";
 import tallaPorTipo from "../utils/tallaPorTipo";
+import { NAVIDAD_ACTIVA, GuirnaldaCard, EtiquetaRegalo, EstrellaMini } from "./navidad/Navidad";
 
 // 🔽 Helper para Cloudinary
 const cldUrl = (url, w, h) => {
@@ -43,7 +44,7 @@ export default function ProductCard({ product, onClick, canEdit }) {
     <motion.div
       whileHover={{ y: -8 }}
       whileTap={{ scale: 0.98 }}
-      className="group relative bg-white rounded-2xl sm:rounded-[2rem] overflow-hidden shadow-sm hover:shadow-2xl hover:shadow-fiebriAzul/10 transition-all duration-500 cursor-pointer w-full border border-gray-100 flex flex-col"
+      className={`group relative bg-white rounded-2xl sm:rounded-[2rem] overflow-hidden shadow-sm hover:shadow-2xl ${NAVIDAD_ACTIVA ? "nv-card" : "hover:shadow-fiebriAzul/10"} transition-all duration-500 cursor-pointer w-full border border-gray-100 flex flex-col`}
       onClick={() => onClick(product)}
     >
       
@@ -56,6 +57,11 @@ export default function ProductCard({ product, onClick, canEdit }) {
             </span>
           </div>
         )}
+
+        {/* 🎄 Guirnalda sobre la foto + etiqueta de regalo + destello dorado en hover */}
+        <GuirnaldaCard />
+        {!isOutOfStock && <EtiquetaRegalo />}
+        {NAVIDAD_ACTIVA && !isOutOfStock && <span className="nv-card-sheen" aria-hidden="true" />}
 
         {/* Etiqueta Nuevo */}
         {!isOutOfStock && isNew && (
@@ -91,12 +97,14 @@ export default function ProductCard({ product, onClick, canEdit }) {
       {/* INFORMACIÓN */}
       <div className="flex flex-col flex-grow">
         {product.type && (
-          <div className="w-full bg-fiebriAzul py-1 sm:py-1.5 text-center">
+          <div className={`w-full bg-fiebriAzul py-1 sm:py-1.5 text-center ${NAVIDAD_ACTIVA ? "nv-type-bar flex items-center justify-center gap-1.5" : ""}`}>
+            {NAVIDAD_ACTIVA && <EstrellaMini className="w-2 h-2 sm:w-2.5 sm:h-2.5" />}
             <span className="text-[7px] sm:text-[9px] font-black text-white uppercase tracking-[0.2em]">{product.type}</span>
+            {NAVIDAD_ACTIVA && <EstrellaMini className="w-2 h-2 sm:w-2.5 sm:h-2.5" />}
           </div>
         )}
 
-        <div className="p-3 sm:p-5 flex flex-col justify-between flex-grow">
+        <div className={`p-3 sm:p-5 flex flex-col justify-between flex-grow ${NAVIDAD_ACTIVA ? "nv-card-info" : ""}`}>
           
           {/* 🚀 EL ARREGLO ESTÁ AQUÍ: line-clamp-3 y min-h-[4em] */}
           <h3 className="text-xs sm:text-sm font-black text-fiebriAzul uppercase italic tracking-tighter leading-tight line-clamp-3 min-h-[4em] sm:line-clamp-2 sm:min-h-[2.8em] group-hover:text-fiebriVerde transition-colors">
@@ -115,7 +123,7 @@ export default function ProductCard({ product, onClick, canEdit }) {
               )}
             </div>
             
-            <div className="h-6 w-6 sm:h-8 sm:w-8 rounded-full bg-fiebriGris flex items-center justify-center group-hover:bg-fiebriVerde transition-colors">
+            <div className={`h-6 w-6 sm:h-8 sm:w-8 rounded-full flex items-center justify-center transition-colors ${NAVIDAD_ACTIVA ? "nv-card-ball" : "bg-fiebriGris group-hover:bg-fiebriVerde"}`}>
               <FaFutbol className="text-gray-300 group-hover:text-fiebriAzul text-[10px] sm:text-sm transition-colors" />
             </div>
           </div>

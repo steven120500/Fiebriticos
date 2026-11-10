@@ -252,3 +252,246 @@
   width: 100%;
   height: auto; /* deja que la altura se ajuste proporcionalmente, pero será cortada por el contenedor */
 }
+/* ===========================================================
+   🎄 NAVIDAD — "Noche buena tica" (components/navidad/Navidad.jsx)
+   Bombillos, estrellas y esferas en línea fina. Sin nieve.
+   =========================================================== */
+:root { --nv-oro: #F5C451; }
+
+/* 💡 Guirnalda bajo el header */
+.nv-garland {
+  position: absolute;
+  left: 0; right: 0; top: 100%;
+  height: 26px;
+  display: flex;
+  overflow: hidden;
+  pointer-events: none;
+  margin-top: -2px;
+}
+.nv-garland-seg { flex: 0 0 auto; overflow: visible; }
+.nv-bulb {
+  filter: drop-shadow(0 0 4px var(--nv-c));
+  animation: nvBulb 3s ease-in-out infinite;
+}
+@keyframes nvBulb {
+  0%, 100% { opacity: 1; }
+  45% { opacity: 0.45; filter: drop-shadow(0 0 0 transparent); }
+  55% { opacity: 0.45; filter: drop-shadow(0 0 0 transparent); }
+}
+
+/* ✨ Cielo estrellado */
+.nv-sky { position: absolute; inset: 0; pointer-events: none; z-index: 0; }
+.nv-star {
+  position: absolute;
+  border-radius: 9999px;
+  background: #fff;
+  opacity: 0.2;
+  animation: nvStar 4s ease-in-out infinite;
+}
+.nv-star--gold { background: var(--nv-oro); box-shadow: 0 0 6px var(--nv-oro); }
+@keyframes nvStar {
+  0%, 100% { opacity: 0.15; transform: scale(0.8); }
+  50% { opacity: 0.9; transform: scale(1.15); }
+}
+
+/* 🔮 Esferas colgantes */
+.nv-ornaments {
+  position: absolute;
+  top: 0; right: 4%;
+  width: 260px; height: 260px;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.9;
+}
+.nv-ornament { animation: nvSway 6s ease-in-out infinite; }
+@keyframes nvSway {
+  0%, 100% { transform: rotate(2.5deg); }
+  50% { transform: rotate(-2.5deg); }
+}
+.nv-twinkle { transform-origin: 180px 160px; animation: nvStar 3s ease-in-out infinite; }
+
+@media (max-width: 1023px) {
+  .nv-ornaments { width: 150px; height: 150px; right: 0; opacity: 0.55; }
+}
+
+/* Texto dorado sutil */
+.nv-oro-texto {
+  background: linear-gradient(90deg, #E9B949, #FBE3A1 50%, #E9B949);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: brilloFiebri 5s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nv-bulb, .nv-star, .nv-ornament, .nv-twinkle, .nv-oro-texto { animation: none; }
+}
+
+/* 🎬 Intro: anillo de bombillos */
+.nv-ring-bulb {
+  position: absolute;
+  width: 7px; height: 7px;
+  margin: -3.5px 0 0 -3.5px;
+  border-radius: 9999px;
+  background: var(--nv-c);
+  box-shadow: 0 0 8px 2px var(--nv-c);
+  pointer-events: none;
+}
+.nv-ring-bulb--on { animation: nvRingTwinkle 1.5s ease-in-out infinite; }
+@keyframes nvRingTwinkle {
+  0%, 100% { transform: scale(1); filter: brightness(1); }
+  50% { transform: scale(0.75); filter: brightness(0.6); }
+}
+
+/* 🃏 Cards: brillo dorado, barra con hilo dorado y esfera colgante */
+.nv-card:hover { box-shadow: 0 25px 50px -12px rgba(245, 196, 81, 0.35); border-color: rgba(245, 196, 81, 0.6); }
+.nv-type-bar { position: relative; }
+.nv-type-bar::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #F5C451 30%, #FBE3A1 50%, #F5C451 70%, transparent);
+}
+@media (prefers-reduced-motion: reduce) {
+  .nv-ring-bulb--on, .nv-card-bulb, .nv-gift-tag, .nv-twinkle-self { animation: none; }
+}
+
+/* 🃏 Card: mini guirnalda sobre la foto */
+.nv-card-garland {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 24px;
+  z-index: 15;
+  pointer-events: none;
+}
+.nv-card-bulb {
+  position: absolute;
+  width: 7px; height: 10px;
+  margin-left: -3.5px;
+  margin-top: 1px;
+  border-radius: 50% 50% 50% 50% / 40% 40% 60% 60%;
+  background: var(--nv-c);
+  box-shadow: 0 0 6px 1px var(--nv-c);
+  animation: nvBulbSoft 2.7s ease-in-out infinite;
+}
+.nv-card-bulb::before {
+  content: "";
+  position: absolute;
+  top: -3px; left: 1.5px;
+  width: 4px; height: 3px;
+  border-radius: 1px;
+  background: #0B1F5C;
+}
+@keyframes nvBulbSoft {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; box-shadow: 0 0 0 0 transparent; }
+}
+.group:hover .nv-card-bulb { box-shadow: 0 0 10px 3px var(--nv-c); }
+
+/* 🏷️ Etiqueta de regalo */
+.nv-gift-tag {
+  position: absolute;
+  bottom: 14px; right: 12px;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  pointer-events: none;
+  transform-origin: 85% 0;
+  animation: nvTagSway 4s ease-in-out infinite;
+}
+.nv-gift-string {
+  width: 1px; height: 14px;
+  margin-right: 14px;
+  background: #F5C451;
+}
+.nv-gift-body {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 9px 4px 16px;
+  background: #fff;
+  color: var(--color-fiebriAzul);
+  font-size: 8px;
+  font-weight: 900;
+  font-style: italic;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  border: 1px solid #F5C451;
+  border-radius: 3px 6px 6px 3px;
+  clip-path: polygon(8px 0, 100% 0, 100% 100%, 8px 100%, 0 50%);
+  box-shadow: 0 6px 14px rgba(0,0,0,0.18);
+}
+.nv-gift-hole {
+  position: absolute;
+  left: 7px; top: 50%;
+  width: 4px; height: 4px;
+  margin-top: -2px;
+  border-radius: 9999px;
+  border: 1px solid #F5C451;
+}
+@keyframes nvTagSway {
+  0%, 100% { transform: rotate(-3deg); }
+  50% { transform: rotate(3deg); }
+}
+@media (min-width: 640px) { .nv-gift-body { font-size: 9px; padding: 5px 11px 5px 18px; } }
+
+/* ✨ Destello dorado que cruza la foto en hover */
+.nv-card-sheen {
+  position: absolute;
+  inset: 0;
+  z-index: 12;
+  pointer-events: none;
+  background: linear-gradient(115deg, transparent 35%, rgba(251, 227, 161, 0.45) 50%, transparent 65%);
+  background-size: 250% 100%;
+  background-position: 120% 0;
+  opacity: 0;
+}
+.group:hover .nv-card-sheen { opacity: 1; background-position: -60% 0; transition: background-position 1s ease, opacity 0.2s; }
+
+/* Info de la card: estrellitas doradas muy tenues */
+.nv-card-info {
+  background-image:
+    radial-gradient(circle, rgba(245,196,81,0.35) 1px, transparent 1.5px),
+    radial-gradient(circle, rgba(30,64,175,0.10) 1px, transparent 1.5px);
+  background-size: 22px 22px, 22px 22px;
+  background-position: 0 0, 11px 11px;
+}
+
+/* Balón del precio convertido en esfera */
+.nv-card-ball {
+  background: radial-gradient(circle at 35% 30%, #FFF6D8, #F5C451 60%, #C9952B);
+  box-shadow: 0 0 0 2px #fff, 0 0 0 3px rgba(245,196,81,0.6);
+}
+.nv-card-ball svg { color: #fff !important; }
+.group:hover .nv-card-ball { box-shadow: 0 0 0 2px #fff, 0 0 12px 3px rgba(245,196,81,0.7); }
+
+/* 🎅 Header: estrellita sobre el logo y contador */
+.nv-logo-star {
+  position: absolute;
+  top: 6%; right: 4%;
+  z-index: 2;
+  filter: drop-shadow(0 0 6px rgba(245,196,81,0.9));
+}
+.nv-logo-star svg { animation: nvStar 2.6s ease-in-out infinite; }
+.nv-countdown {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border-radius: 9999px;
+  background: rgba(11, 31, 92, 0.85);
+  border: 1px solid rgba(245, 196, 81, 0.55);
+  color: #FBE3A1;
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  white-space: nowrap;
+  box-shadow: 0 0 14px rgba(245, 196, 81, 0.25);
+}
+.nv-twinkle-self { animation: nvStar 2.4s ease-in-out infinite; }
+@media (min-width: 640px) { .nv-countdown { font-size: 11px; padding: 8px 14px; } }

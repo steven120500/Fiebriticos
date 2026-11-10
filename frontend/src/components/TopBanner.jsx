@@ -1,13 +1,20 @@
 import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { NAVIDAD_ACTIVA } from "./navidad/Navidad";
 
 function TopBanner() {
-  const messages = [
-    
-    "ENVÍOS A TODO EL PAÍS",
-    "SOMOS FIEBRITICOS CR",
-    "LA MEJOR CALIDAD",
-  ];
+  const messages = NAVIDAD_ACTIVA
+    ? [
+        "✦ FELICES FIESTAS, FIEBRES ✦",
+        "EL REGALO PERFECTO PARA UN FIEBRE",
+        "ENVÍOS NAVIDEÑOS A TODO EL PAÍS",
+        "LA MEJOR CALIDAD",
+      ]
+    : [
+        "ENVÍOS A TODO EL PAÍS",
+        "SOMOS FIEBRITICOS CR",
+        "LA MEJOR CALIDAD",
+      ];
   const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {

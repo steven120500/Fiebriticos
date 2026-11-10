@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import Contacto from "./Contacto"; 
 import { motion, AnimatePresence } from "framer-motion";
+import { Guirnalda, ContadorNavidad, EstrellaMini, NAVIDAD_ACTIVA } from "./navidad/Navidad";
 
 export default function Header({
   onLoginClick,
@@ -35,16 +36,21 @@ export default function Header({
 
   return (
     <header className="px-4 sm:px-10 py-3 fixed w-full top-6 left-0 z-50 transition-all duration-300 bg-fiebriVerde border-fiebriVerde shadow-2xl">
-      
-      
+      <Guirnalda />
+
       <div className="flex items-center justify-between max-w-7xl mx-auto">
         
         {/* 🔹 IZQUIERDA: Logo y Accesos Rápidos */}
         <div className="flex items-center gap-2 sm:gap-8">
           <button 
             onClick={() => { navigate('/'); if (onLogoClick) onLogoClick(); }} 
-            className="focus:outline-none hover:scale-105 transition-transform"
+            className="relative focus:outline-none hover:scale-105 transition-transform"
           >
+            {NAVIDAD_ACTIVA && (
+              <span className="nv-logo-star" aria-hidden="true">
+                <EstrellaMini className="w-4 h-4 sm:w-5 sm:h-5" />
+              </span>
+            )}
             <img src={logo} alt="Fiebriticos Logo" className="h-20  sm:h-28 object-contain" />
           </button>
 
@@ -69,6 +75,7 @@ export default function Header({
 
         {/* 🔹 DERECHA: Perfil de Usuario */}
         <div className="flex items-center gap-3 sm:gap-5">
+          <ContadorNavidad />
           <button 
             onClick={() => setSidebarOpen(true)} 
             className="rounded-2xl bg-white/10 border border-white/20 p-1 w-12 h-12 flex items-center justify-center shadow-xl hover:border-fiebriVerde transition-all overflow-hidden group"
